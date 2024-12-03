@@ -9,9 +9,14 @@ do:
         compete: false
         branches:
           - callNurse:
-              set:
-                patientId: John
-                room: 1
+              do:
+                - waitForNurse:
+                    wait:
+                     seconds: 1
+                - nurseArrived:
+                   set:
+                     patientId: John
+                     room: 1
           - callDoctor:
               set:
                 patientId: Smith

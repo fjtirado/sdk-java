@@ -15,6 +15,7 @@
  */
 package io.serverlessworkflow.impl.executors;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import io.serverlessworkflow.api.types.FlowDirectiveEnum;
 import io.serverlessworkflow.api.types.ForkTask;
 import io.serverlessworkflow.api.types.ForkTaskConfiguration;
@@ -24,16 +25,16 @@ import io.serverlessworkflow.impl.WorkflowContext;
 import io.serverlessworkflow.impl.WorkflowDefinition;
 import io.serverlessworkflow.impl.WorkflowState;
 import io.serverlessworkflow.impl.WorkflowUtils;
-import io.serverlessworkflow.impl.generic.SortedArrayList;
 import io.serverlessworkflow.impl.json.JsonUtils;
 import java.lang.reflect.UndeclaredThrowableException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
-import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -46,8 +47,6 @@ public class ForkExecutor extends AbstractTaskExecutor<ForkTask> {
     super(task, definition);
     service = definition.executorService();
   }
-
-  private record BranchContext(String taskName, TaskContext<?> taskContext) {}
 
   @Override
   protected void internalExecute(WorkflowContext workflow, TaskContext<ForkTask> taskContext) {
@@ -62,13 +61,10 @@ public class ForkExecutor extends AbstractTaskExecutor<ForkTask> {
             item.getName(),
             service.submit(() -> executeBranch(workflow, taskContext.copy(), item, i)));
       }
-      List<BranchContext> results =
-          new SortedArrayList<>(
-              (arg1, arg2) ->
-                  arg1.taskContext.completedAt().compareTo(arg2.taskContext.completedAt()));
+      List<Map.Entry<String, TaskContext<?>>> results = new ArrayList<>();
       for (Map.Entry<String, Future<TaskContext<?>>> entry : futures.entrySet()) {
         try {
-          results.add(new BranchContext(entry.getKey(), entry.getValue().get()));
+          results.add(Map.entry(entry.getKey(), entry.getValue().get()));
         } catch (ExecutionException ex) {
           Throwable cause = ex.getCause();
           if (cause instanceof RuntimeException) {
@@ -77,24 +73,25 @@ public class ForkExecutor extends AbstractTaskExecutor<ForkTask> {
             throw new UndeclaredThrowableException(ex);
           }
         } catch (InterruptedException ex) {
-          logger.warn(
-              "Thred executing branch {} was interrupted, this branch will be ignored",
-              entry.getKey(),
-              ex);
+          logger.warn("Branch {} was interrupted, no result will be recorded", entry.getKey(), ex);
         }
       }
       if (!results.isEmpty()) {
+        Stream<Map.Entry<String, TaskContext<?>>> sortedStream =
+            results.stream()
+                .sorted(
+                    (arg1, arg2) ->
+                        arg1.getValue().completedAt().compareTo(arg2.getValue().completedAt()));
         taskContext.rawOutput(
             forkConfig.isCompete()
-                ? results.get(0).taskContext().output()
-                : JsonUtils.fromValue(
-                    results.stream()
-                        .map(
-                            e ->
-                                JsonUtils.mapper()
-                                    .createObjectNode()
-                                    .set(e.taskName(), e.taskContext().output()))
-                        .collect(Collectors.toList())));
+                ? sortedStream.map(e -> e.getValue().output()).findFirst().orElseThrow()
+                : sortedStream
+                    .<JsonNode>map(
+                        e ->
+                            JsonUtils.mapper()
+                                .createObjectNode()
+                                .set(e.getKey(), e.getValue().output()))
+                    .collect(JsonUtils.arrayNodeCollector()));
       }
     }
   }
