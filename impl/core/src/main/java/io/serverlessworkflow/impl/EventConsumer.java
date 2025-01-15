@@ -15,8 +15,10 @@
  */
 package io.serverlessworkflow.impl;
 
-public interface EventConsumer {
-  void register(EventRegistration register);
+import io.serverlessworkflow.api.types.EventFilter;
 
-  void unregister(EventRegistration register);
+public interface EventConsumer<T extends EventRegistration> {
+  EventRegistrationBuilder<T> register(EventFilter register);
+
+  void unregister(T register);
 }

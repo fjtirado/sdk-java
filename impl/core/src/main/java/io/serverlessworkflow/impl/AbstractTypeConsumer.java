@@ -15,13 +15,19 @@
  */
 package io.serverlessworkflow.impl;
 
-public class DefaultEventConsumer extends AbstractTypeConsumer {
+import io.serverlessworkflow.api.types.EventFilter;
 
-  private static DefaultEventConsumer instance = new DefaultEventConsumer();
+public abstract class AbstractTypeConsumer implements EventConsumer<TypeEventRegistration> {
 
-  private DefaultEventConsumer() {}
+  @Override
+  public EventRegistrationBuilder<TypeEventRegistration> register(EventFilter register) {
+    // TODO Auto-generated method stub
+    return null;
+  }
 
-  public static DefaultEventConsumer get() {
-    return instance;
+  @Override
+  public void unregister(TypeEventRegistration register) {
+    // TODO Auto-generated method stub
+
   }
 }

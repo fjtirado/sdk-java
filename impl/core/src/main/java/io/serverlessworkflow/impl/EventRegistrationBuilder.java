@@ -15,13 +15,9 @@
  */
 package io.serverlessworkflow.impl;
 
-public class DefaultEventConsumer extends AbstractTypeConsumer {
+import io.cloudevents.CloudEvent;
+import java.util.function.Consumer;
+import java.util.function.Function;
 
-  private static DefaultEventConsumer instance = new DefaultEventConsumer();
-
-  private DefaultEventConsumer() {}
-
-  public static DefaultEventConsumer get() {
-    return instance;
-  }
-}
+public interface EventRegistrationBuilder<T extends EventRegistration>
+    extends Function<Consumer<CloudEvent>, T> {}
