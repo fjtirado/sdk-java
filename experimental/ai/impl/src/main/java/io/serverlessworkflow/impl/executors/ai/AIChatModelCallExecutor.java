@@ -29,20 +29,19 @@ import java.util.concurrent.CompletableFuture;
 
 public class AIChatModelCallExecutor implements CallableTask<CallAgentAI> {
 
+  private CallAgentAIExecutor executor;
+  
   @Override
-  public void init(CallAgentAI task, WorkflowApplication application, ResourceLoader loader) {}
+  public void init(CallAgentAI task, WorkflowApplication application, ResourceLoader loader) {
+	  executor = new CallAgentAIExecutor(task);
+  }
 
   @Override
   public CompletableFuture<WorkflowModel> apply(
       WorkflowContext workflowContext, TaskContext taskContext, WorkflowModel input) {
     WorkflowModelFactory modelFactory = workflowContext.definition().application().modelFactory();
-    if (taskContext.task() instanceof CallAgentAI agenticAI) {
-      return CompletableFuture.completedFuture(
-          modelFactory.fromAny(new CallAgentAIExecutor().execute(agenticAI, input.asJavaObject())));
-    }
-    throw new IllegalArgumentException(
-        "AIChatModelCallExecutor can only process CallAgentAI tasks, but received: "
-            + taskContext.task().getClass().getName());
+    return CompletableFuture.completedFuture(
+          modelFactory.fromAny(executor.execute(input.asJavaObject())));
   }
 
   @Override

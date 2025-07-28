@@ -24,9 +24,15 @@ import java.util.Map;
 
 public class CallAgentAIExecutor {
 
+  private final CallAgentAI callAgentAI;
+  
   private static final Cognisphere cognisphere = new Cognisphere();
 
-  public Object execute(CallAgentAI callAgentAI, Object input) {
+  public CallAgentAIExecutor(CallAgentAI callAgentAI) {
+	  this.callAgentAI = callAgentAI;
+}
+
+  public Object execute( Object input) {
     AgentExecutor agentExecutor = AgentUtil.agentToExecutor(callAgentAI.getAgentInstance());
 
     Map<String, Object> output = (Map<String, Object>) input;
