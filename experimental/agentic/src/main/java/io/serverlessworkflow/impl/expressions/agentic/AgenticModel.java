@@ -19,29 +19,30 @@ import dev.langchain4j.agentic.cognisphere.Cognisphere;
 import dev.langchain4j.agentic.cognisphere.ResultWithCognisphere;
 import io.serverlessworkflow.impl.WorkflowModel;
 import io.serverlessworkflow.impl.expressions.func.JavaModel;
+
+import java.time.OffsetDateTime;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Map;
 import java.util.Optional;
+import java.util.function.BiConsumer;
 
-class AgenticModel extends JavaModel {
+class AgenticModel implements WorkflowModel {
 
   private final Cognisphere cognisphere;
+  private Object output;
 
-  AgenticModel(Object object, Cognisphere cognisphere) {
-    super(object);
+  AgenticModel(Cognisphere cognisphere) {
     this.cognisphere = cognisphere;
   }
 
-  @Override
   public void setObject(Object obj) {
-    super.setObject(obj);
+    this.output = obj;
   }
 
   @Override
   public Collection<WorkflowModel> asCollection() {
-    return object instanceof Collection value
-        ? new AgenticModelCollection(value, cognisphere)
-        : Collections.emptyList();
+	  throw new UnsupportedOperationException();
   }
 
   @Override
@@ -49,9 +50,54 @@ class AgenticModel extends JavaModel {
     if (Cognisphere.class.isAssignableFrom(clazz)) {
       return Optional.of(clazz.cast(cognisphere));
     } else if (ResultWithCognisphere.class.isAssignableFrom(clazz)) {
-      return Optional.of(clazz.cast(new ResultWithCognisphere<>(cognisphere, object)));
+      return Optional.of(clazz.cast(new ResultWithCognisphere<>(cognisphere, output)));
     } else {
-      return super.as(clazz);
+      return Optional.of(clazz.cast(output));
     }
+  }
+
+  @Override
+  public void forEach(BiConsumer<String, WorkflowModel> consumer) {
+	  throw new UnsupportedOperationException();
+  }
+
+  @Override
+  public Optional<Boolean> asBoolean() {
+	return Optional.empty();
+  }
+
+  @Override
+  public Optional<String> asText() {
+	return Optional.empty();
+  }
+
+  @Override
+  public Optional<OffsetDateTime> asDate() {
+	return Optional.empty();
+  }
+
+  @Override
+  public Optional<Number> asNumber() {
+	return Optional.empty();
+  }
+
+  @Override
+  public Optional<Map<String, Object>> asMap() {
+	return Optional.empty();
+  }
+
+  @Override
+  public Object asJavaObject() {
+	return output;
+  }
+
+  @Override
+  public Object asIs() {
+	return cognisphere;
+  }
+
+  @Override
+  public Class<?> objectClass() {
+	return Cognisphere.class;
   }
 }

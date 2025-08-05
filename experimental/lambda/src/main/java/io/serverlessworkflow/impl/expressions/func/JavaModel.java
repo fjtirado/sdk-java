@@ -27,16 +27,13 @@ import java.util.stream.Collectors;
 
 public class JavaModel implements WorkflowModel {
 
-  protected Object object;
+  protected final Object object;
 
-  protected JavaModel(Object object) {
+  public JavaModel(Object object) {
     this.object = asJavaObject(object);
   }
 
-  protected void setObject(Object object) {
-    this.object = object;
-  }
-
+ 
   @Override
   public void forEach(BiConsumer<String, WorkflowModel> consumer) {
     asMap()
