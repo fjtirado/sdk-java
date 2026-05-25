@@ -24,7 +24,6 @@ import io.serverlessworkflow.impl.TaskContext;
 import io.serverlessworkflow.impl.WorkflowApplication;
 import io.serverlessworkflow.impl.WorkflowContext;
 import io.serverlessworkflow.impl.WorkflowModel;
-import io.serverlessworkflow.impl.WorkflowModelFactory;
 import java.util.AbstractCollection;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -89,21 +88,14 @@ public abstract class AbstractTypeConsumer
 
   private static class CloudEventConsumer extends AbstractCollection<TypeEventRegistration>
       implements Consumer<CloudEvent> {
-    private final WorkflowModelFactory modelFactory;
     private Collection<TypeEventRegistration> registrations = new CopyOnWriteArrayList<>();
-
-    CloudEventConsumer(WorkflowModelFactory modelFactory) {
-      this.modelFactory = modelFactory;
-    }
 
     @Override
     public void accept(CloudEvent ce) {
       logger.debug("Received cloud event {}", ce);
       for (TypeEventRegistration registration : registrations) {
-        if (registration.predicate().test(ce, registration.workflow(), registration.task())) {
-          if (!testCorrelation(ce, registration)) {
-            continue;
-          }
+        if (registration.predicate().test(ce, registration.workflow(), registration.task())
+            && testCorrelation(ce, registration)) {
           registration.consumer().accept(ce);
         }
       }
@@ -118,7 +110,7 @@ public abstract class AbstractTypeConsumer
       for (CloudEventPredicate pred : predicates) {
         if (pred instanceof ModelAwareCloudEventPredicate ma) {
           if (eventModel == null) {
-            eventModel = modelFactory.from(ce);
+            eventModel = registration.workflow().definition().application().modelFactory().from(ce);
           }
           if (!ma.test(eventModel, registration.workflow(), registration.task())) {
             return false;
@@ -175,7 +167,7 @@ public abstract class AbstractTypeConsumer
           .computeIfAbsent(
               registration.type(),
               k -> {
-                CloudEventConsumer consumer = new CloudEventConsumer(builder.modelFactory());
+                CloudEventConsumer consumer = new CloudEventConsumer();
                 register(k, consumer);
                 return consumer;
               })
