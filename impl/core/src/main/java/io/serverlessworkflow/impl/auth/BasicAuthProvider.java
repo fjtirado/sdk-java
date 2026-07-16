@@ -30,6 +30,7 @@ import io.serverlessworkflow.impl.WorkflowUtils;
 import io.serverlessworkflow.impl.WorkflowValueResolver;
 import java.net.URI;
 import java.util.Base64;
+import java.util.concurrent.CompletableFuture;
 
 class BasicAuthProvider implements AuthProvider {
 
@@ -58,10 +59,11 @@ class BasicAuthProvider implements AuthProvider {
   }
 
   @Override
-  public String content(WorkflowContext workflow, TaskContext task, WorkflowModel model, URI uri) {
-    return new String(
+  public CompletableFuture<String> content(
+      WorkflowContext workflow, TaskContext task, WorkflowModel model, URI uri) {
+    return CompletableFuture.completedFuture(
         Base64.getEncoder()
-            .encode(
+            .encodeToString(
                 String.format(
                         USER_PASSWORD,
                         userFilter.apply(workflow, task, model),
