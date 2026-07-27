@@ -109,20 +109,25 @@ public class WorkflowMutableInstance implements WorkflowInstance {
                                         l ->
                                             l.onWorkflowCompleted(
                                                 new WorkflowCompletedEvent(workflowContext, model)))
-                                    .thenApply(__ -> model)));
+                                    .thenApply(__ -> model)))
+            .whenComplete(this::cleanUp);
     futureRef.set(future);
     return future;
   }
 
   private void whenCompleted(WorkflowModel result, Throwable ex) {
     completedAt = Instant.now();
+    if (ex != null) {
+      handleException(ex instanceof CompletionException ? ex = ex.getCause() : ex);
+    }
+  }
+
+  private void cleanUp(WorkflowModel result, Throwable ex) {
     additionalObjects.values().stream()
         .filter(AutoCloseable.class::isInstance)
         .map(AutoCloseable.class::cast)
         .forEach(WorkflowUtils::safeClose);
-    if (ex != null) {
-      handleException(ex instanceof CompletionException ? ex = ex.getCause() : ex);
-    }
+    additionalObjects.clear();
     workflowContext.definition().removeInstance(this);
   }
 
