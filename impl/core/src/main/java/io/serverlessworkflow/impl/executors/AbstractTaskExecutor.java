@@ -18,6 +18,7 @@ package io.serverlessworkflow.impl.executors;
 import static io.serverlessworkflow.impl.LifecycleEventsUtils.publishEvent;
 import static io.serverlessworkflow.impl.WorkflowUtils.buildWorkflowFilter;
 import static io.serverlessworkflow.impl.WorkflowUtils.getSchemaValidator;
+import static io.serverlessworkflow.impl.WorkflowUtils.validationError;
 
 import io.serverlessworkflow.api.types.Export;
 import io.serverlessworkflow.api.types.FlowDirective;
@@ -232,7 +233,8 @@ public abstract class AbstractTaskExecutor<T extends TaskBase> implements TaskEx
                   })
               .thenApply(
                   t -> {
-                    inputSchemaValidator.ifPresent(s -> s.validate(t.rawInput()));
+                    inputSchemaValidator.ifPresent(
+                        s -> validationError(s.validate(t.rawInput()), t));
                     inputProcessor.ifPresent(
                         p -> taskContext.input(p.apply(workflowContext, t, t.rawInput())));
                     return t;
@@ -252,12 +254,14 @@ public abstract class AbstractTaskExecutor<T extends TaskBase> implements TaskEx
                   t -> {
                     outputProcessor.ifPresent(
                         p -> t.output(p.apply(workflowContext, t, t.rawOutput())));
-                    outputSchemaValidator.ifPresent(s -> s.validate(t.output()));
+                    outputSchemaValidator.ifPresent(
+                        s -> validationError(s.validate(t.output()), t));
                     contextProcessor.ifPresent(
                         p ->
                             workflowContext.context(
                                 p.apply(workflowContext, t, workflowContext.context())));
-                    contextSchemaValidator.ifPresent(s -> s.validate(workflowContext.context()));
+                    contextSchemaValidator.ifPresent(
+                        s -> validationError(s.validate(workflowContext.context()), t));
                     t.completedAt(Instant.now());
                     return t;
                   })

@@ -20,32 +20,29 @@ import com.networknt.schema.Error;
 import com.networknt.schema.Schema;
 import com.networknt.schema.SchemaRegistry;
 import com.networknt.schema.SpecificationVersion;
-import io.serverlessworkflow.impl.WorkflowModel;
-import io.serverlessworkflow.impl.schema.SchemaValidator;
+import io.serverlessworkflow.impl.schema.AbstractSchemaValidator;
 import java.util.Collection;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
-public class JsonSchemaValidator implements SchemaValidator {
+public class JsonSchemaValidator extends AbstractSchemaValidator<JsonNode> {
 
   private final Schema schemaObject;
 
   public JsonSchemaValidator(JsonNode jsonNode) {
+    super(JsonNode.class);
     this.schemaObject =
         SchemaRegistry.withDefaultDialect(SpecificationVersion.DRAFT_7).getSchema(jsonNode);
   }
 
   @Override
-  public void validate(WorkflowModel node) {
-    Collection<Error> report =
-        schemaObject.validate(
-            node.as(JsonNode.class)
-                .orElseThrow(
-                    () ->
-                        new IllegalArgumentException(
-                            "Default schema validator requires WorkflowModel to support conversion to json node")));
-    if (!report.isEmpty()) {
-      StringBuilder sb = new StringBuilder("There are JsonSchema validation errors:");
-      report.forEach(m -> sb.append(System.lineSeparator()).append(m.getMessage()));
-      throw new IllegalArgumentException(sb.toString());
-    }
+  protected Optional<String> validate(JsonNode node) {
+    Collection<Error> report = schemaObject.validate(node);
+    return report.isEmpty()
+        ? Optional.empty()
+        : Optional.of(
+            report.stream()
+                .map(Error::getMessage)
+                .collect(Collectors.joining(System.lineSeparator())));
   }
 }

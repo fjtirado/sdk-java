@@ -21,7 +21,10 @@ import static org.assertj.core.api.Assertions.catchThrowableOfType;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 
 import io.serverlessworkflow.impl.WorkflowApplication;
+import io.serverlessworkflow.impl.WorkflowError;
+import io.serverlessworkflow.impl.WorkflowException;
 import io.serverlessworkflow.impl.WorkflowModel;
+import io.serverlessworkflow.types.Errors;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
@@ -373,18 +376,19 @@ public class HTTPWorkflowDefinitionTest {
   }
 
   @Test
-  void testWrongSchema_should_throw_illegal_argument() {
-    IllegalArgumentException exception =
+  void testWrongSchema_should_throw_exception() {
+    WorkflowException exception =
         catchThrowableOfType(
-            IllegalArgumentException.class,
+            WorkflowException.class,
             () ->
                 appl.workflowDefinition(
                         readWorkflowFromClasspath(
                             "workflows-samples/call-http-query-parameters.yaml"))
                     .instance(Map.of()));
-    assertThat(exception)
-        .isNotNull()
-        .hasMessageContaining("There are JsonSchema validation errors");
+    assertThat(exception).isNotNull();
+    WorkflowError error = exception.getWorkflowError();
+    assertThat(error.status()).isEqualTo(400);
+    assertThat(error.type()).isEqualTo(Errors.VALIDATION.toString());
   }
 
   @Test

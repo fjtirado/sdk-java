@@ -16,6 +16,7 @@
 package io.serverlessworkflow.impl;
 
 import static io.serverlessworkflow.impl.LifecycleEventsUtils.publishEvent;
+import static io.serverlessworkflow.impl.WorkflowUtils.validationError;
 
 import io.serverlessworkflow.impl.executors.TaskExecutorHelper;
 import io.serverlessworkflow.impl.lifecycle.WorkflowCancelledEvent;
@@ -100,8 +101,9 @@ public class WorkflowMutableInstance implements WorkflowInstance {
                                 .inputFilter()
                                 .map(f -> f.apply(workflowContext, null, input))
                                 .orElse(input))
-                        .whenComplete(this::whenCompleted)
-                        .thenApply(this::whenSuccess)
+                        .whenComplete(this::setCompleteDate)
+                        .thenApply(this::filterAndValidate)
+                        .whenComplete(this::handleException)
                         .thenCompose(
                             model ->
                                 publishEvent(
@@ -115,11 +117,8 @@ public class WorkflowMutableInstance implements WorkflowInstance {
     return future;
   }
 
-  private void whenCompleted(WorkflowModel result, Throwable ex) {
+  private void setCompleteDate(WorkflowModel result, Throwable ex) {
     completedAt = Instant.now();
-    if (ex != null) {
-      handleException(ex instanceof CompletionException ? ex = ex.getCause() : ex);
-    }
   }
 
   private void cleanUp(WorkflowModel result, Throwable ex) {
@@ -131,23 +130,28 @@ public class WorkflowMutableInstance implements WorkflowInstance {
     workflowContext.definition().removeInstance(this);
   }
 
-  private void handleException(Throwable ex) {
-    if (!(ex instanceof CancellationException)) {
-      status(WorkflowStatus.FAULTED);
-      publishEvent(
-          workflowContext, l -> l.onWorkflowFailed(new WorkflowFailedEvent(workflowContext, ex)));
+  private void handleException(WorkflowModel result, Throwable exception) {
+    if (exception != null) {
+      final Throwable cause =
+          exception instanceof CompletionException ? exception.getCause() : exception;
+      if (!(cause instanceof CancellationException)) {
+        status(WorkflowStatus.FAULTED);
+        publishEvent(
+            workflowContext,
+            l -> l.onWorkflowFailed(new WorkflowFailedEvent(workflowContext, cause)));
+      }
+    } else {
+      status(WorkflowStatus.COMPLETED);
     }
   }
 
-  private WorkflowModel whenSuccess(WorkflowModel node) {
+  private WorkflowModel filterAndValidate(WorkflowModel model) {
+    WorkflowDefinition definition = workflowContext.definition();
     WorkflowModel output =
-        workflowContext
-            .definition()
-            .outputFilter()
-            .map(f -> f.apply(workflowContext, null, node))
-            .orElse(node);
-    workflowContext.definition().outputSchemaValidator().ifPresent(v -> v.validate(output));
-    status(WorkflowStatus.COMPLETED);
+        definition.outputFilter().map(f -> f.apply(workflowContext, null, model)).orElse(model);
+    definition
+        .outputSchemaValidator()
+        .ifPresent(v -> validationError(v.validate(output), workflowContext));
     return output;
   }
 

@@ -318,4 +318,26 @@ public class WorkflowUtils {
         .sorted()
         .findFirst();
   }
+
+  public static void validationError(
+      Optional<WorkflowError.Builder> errorBuilder, TaskContextData taskContext) {
+    validationError(errorBuilder, taskContext.position().jsonPointer().toString());
+  }
+
+  public static void validationError(
+      Optional<WorkflowError.Builder> errorBuilder, WorkflowDefinitionId definition) {
+    validationError(errorBuilder, definition.toString());
+  }
+
+  public static void validationError(
+      Optional<WorkflowError.Builder> errorBuilder, WorkflowContextData workflowContext) {
+    validationError(errorBuilder, workflowContext.instanceData().id());
+  }
+
+  private static void validationError(
+      Optional<WorkflowError.Builder> errorBuilder, String instance) {
+    if (errorBuilder.isPresent()) {
+      throw new WorkflowException(errorBuilder.orElseThrow().instance(instance).build());
+    }
+  }
 }

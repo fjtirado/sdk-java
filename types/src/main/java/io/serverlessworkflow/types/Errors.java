@@ -93,4 +93,5 @@ public final class Errors {
   public static final Standard DATA = new Standard("data", 422);
   public static final Standard TIMEOUT = new Standard("timeout", 408);
   public static final Standard NOT_IMPLEMENTED = new Standard("not-implemented", 501);
+  public static final Standard VALIDATION = new Standard("validation", 400);
 }
