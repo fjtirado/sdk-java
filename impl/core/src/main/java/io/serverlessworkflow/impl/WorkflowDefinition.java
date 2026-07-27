@@ -18,6 +18,7 @@ package io.serverlessworkflow.impl;
 import static io.serverlessworkflow.impl.WorkflowUtils.buildWorkflowFilter;
 import static io.serverlessworkflow.impl.WorkflowUtils.getSchemaValidator;
 import static io.serverlessworkflow.impl.WorkflowUtils.safeClose;
+import static io.serverlessworkflow.impl.WorkflowUtils.validationError;
 
 import io.serverlessworkflow.api.types.Input;
 import io.serverlessworkflow.api.types.Output;
@@ -125,7 +126,7 @@ public class WorkflowDefinition implements AutoCloseable, WorkflowDefinitionData
 
   public WorkflowInstance instance(Object input) {
     WorkflowModel inputModel = application.modelFactory().fromAny(input);
-    inputSchemaValidator().ifPresent(v -> v.validate(inputModel));
+    inputSchemaValidator().ifPresent(v -> validationError(v.validate(inputModel), definitionId));
     return new WorkflowMutableInstance(this, application().idFactory().get(), inputModel);
   }
 

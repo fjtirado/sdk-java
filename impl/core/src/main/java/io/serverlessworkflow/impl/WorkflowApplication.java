@@ -219,7 +219,9 @@ public class WorkflowApplication implements AutoCloseable {
             private final SchemaValidator NoValidation =
                 new SchemaValidator() {
                   @Override
-                  public void validate(WorkflowModel node) {}
+                  public Optional<WorkflowError.Builder> validate(WorkflowModel model) {
+                    return Optional.empty();
+                  }
                 };
 
             @Override

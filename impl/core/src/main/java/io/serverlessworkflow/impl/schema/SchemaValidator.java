@@ -15,8 +15,10 @@
  */
 package io.serverlessworkflow.impl.schema;
 
+import io.serverlessworkflow.impl.WorkflowError;
 import io.serverlessworkflow.impl.WorkflowModel;
+import java.util.Optional;
 
 public interface SchemaValidator {
-  void validate(WorkflowModel node);
+  Optional<WorkflowError.Builder> validate(WorkflowModel model);
 }
