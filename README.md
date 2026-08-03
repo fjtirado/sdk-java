@@ -2,7 +2,7 @@
 
 # Open Workflow Specification - Java SDK
 
-Provides the Java API for the [Serverless Workflow Specification](https://github.com/open-workflow-specification/specification)
+Provides the Java API for the [Open Workflow Specification](https://github.com/open-workflow-specification/specification)
 
 With the SDK you can:
 
