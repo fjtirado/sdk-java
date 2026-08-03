@@ -16,6 +16,9 @@
 package io.serverlessworkflow.impl.auth;
 
 import io.serverlessworkflow.api.types.AuthenticationPolicyUnion;
+import io.serverlessworkflow.api.types.BasicAuthenticationPolicy;
+import io.serverlessworkflow.api.types.BearerAuthenticationPolicy;
+import io.serverlessworkflow.api.types.DigestAuthenticationPolicy;
 import io.serverlessworkflow.api.types.EndpointConfiguration;
 import io.serverlessworkflow.api.types.ReferenceableAuthenticationPolicy;
 import io.serverlessworkflow.api.types.Workflow;
@@ -56,23 +59,54 @@ public class DefaultAuthProviderFactory implements AuthProviderFactory {
       AuthenticationPolicyUnion authenticationPolicy,
       String method) {
     if (authenticationPolicy.getBasicAuthenticationPolicy() != null) {
-      return Optional.of(
-          new BasicAuthProvider(
-              app, workflow, authenticationPolicy.getBasicAuthenticationPolicy()));
+      return Optional.ofNullable(
+          basicAuthProvider(app, workflow, authenticationPolicy.getBasicAuthenticationPolicy()));
     } else if (authenticationPolicy.getBearerAuthenticationPolicy() != null) {
-      return Optional.of(
-          new BearerAuthProvider(
-              app, workflow, authenticationPolicy.getBearerAuthenticationPolicy()));
+      return Optional.ofNullable(
+          bearerAuthProvider(app, workflow, authenticationPolicy.getBearerAuthenticationPolicy()));
     } else if (authenticationPolicy.getDigestAuthenticationPolicy() != null) {
-      return Optional.of(
-          new DigestAuthProvider(
+      return Optional.ofNullable(
+          digestAuthProvider(
               app, workflow, authenticationPolicy.getDigestAuthenticationPolicy(), method));
     }
     return OAuthUtils.from(authenticationPolicy)
         .map(
             policyData ->
                 policyData.scheme() == OAuthScheme.OPENID_CONNECT
-                    ? new OpenIdAuthProvider(app, workflow, policyData)
-                    : new OAuth2AuthProvider(app, workflow, policyData));
+                    ? openIdAuthProvider(app, workflow, policyData)
+                    : oAuth2AuthProvider(app, workflow, policyData));
+  }
+
+  protected AuthProvider oAuth2AuthProvider(
+      WorkflowApplication app, Workflow workflow, OAuthPolicyData policyData) {
+    return new OAuth2AuthProvider(app, workflow, policyData);
+  }
+
+  protected AuthProvider openIdAuthProvider(
+      WorkflowApplication app, Workflow workflow, OAuthPolicyData policyData) {
+    return new OpenIdAuthProvider(app, workflow, policyData);
+  }
+
+  protected AuthProvider digestAuthProvider(
+      WorkflowApplication app,
+      Workflow workflow,
+      DigestAuthenticationPolicy digestAuthenticationPolicy,
+      String method) {
+
+    return new DigestAuthProvider(app, workflow, digestAuthenticationPolicy, method);
+  }
+
+  protected AuthProvider bearerAuthProvider(
+      WorkflowApplication app,
+      Workflow workflow,
+      BearerAuthenticationPolicy bearerAuthenticationPolicy) {
+    return new BearerAuthProvider(app, workflow, bearerAuthenticationPolicy);
+  }
+
+  protected AuthProvider basicAuthProvider(
+      WorkflowApplication app,
+      Workflow workflow,
+      BasicAuthenticationPolicy basicAuthenticationPolicy) {
+    return new BasicAuthProvider(app, workflow, basicAuthenticationPolicy);
   }
 }

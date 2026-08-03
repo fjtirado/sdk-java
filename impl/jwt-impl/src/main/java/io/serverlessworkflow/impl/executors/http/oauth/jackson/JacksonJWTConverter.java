@@ -34,9 +34,9 @@ public class JacksonJWTConverter implements JWTConverter {
     String[] parts = token.split("\\.");
     if (parts.length < 2) {
       throw new IllegalArgumentException(
-          "Invalid JWT token format. There should at least two parts separated by :");
+          "Invalid JWT token format. There should at least two parts separated by .");
     }
-    return new JacksonJWTImpl(token, fromPart2Map(parts[0]), fromPart2Map(parts[1]));
+    return new JWT(token, fromPart2Map(parts[0]), fromPart2Map(parts[1]));
   }
 
   private static final Map<String, Object> fromPart2Map(String part) {
