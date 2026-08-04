@@ -16,6 +16,7 @@
 package io.serverlessworkflow.impl.executors;
 
 import io.serverlessworkflow.api.types.ForTask;
+import io.serverlessworkflow.api.types.In;
 import io.serverlessworkflow.impl.TaskContext;
 import io.serverlessworkflow.impl.WorkflowContext;
 import io.serverlessworkflow.impl.WorkflowDefinition;
@@ -50,9 +51,11 @@ public class ForExecutor extends RegularTaskExecutor<ForTask> {
     }
 
     protected WorkflowValueResolver<Collection<?>> buildCollectionFilter() {
+      In in = task.getFor().getIn();
       return application
           .expressionFactory()
-          .resolveCollection(ExpressionDescriptor.from(task.getFor().getIn()));
+          .resolveCollection(
+              new ExpressionDescriptor(in.getForInExpression(), in.getForInInlineArray()));
     }
 
     @Override

@@ -17,4 +17,4 @@ do:
         do:
           - handleError:
               set:
-                errorMessage: ${$caughtError.details}
+                errorMessage: ${$caughtError.detail}

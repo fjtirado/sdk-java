@@ -15,6 +15,8 @@
  */
 package io.serverlessworkflow.api;
 
+import com.fasterxml.jackson.core.exc.StreamReadException;
+import com.fasterxml.jackson.databind.DatabindException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.networknt.schema.Error;
 import com.networknt.schema.InputFormat;
@@ -65,12 +67,13 @@ class ValidationReader implements WorkflowReaderOperations {
     return validate(format.mapper().readValue(input, JsonNode.class), format);
   }
 
-  private Workflow validate(JsonNode value, WorkflowFormat format) {
+  private Workflow validate(JsonNode value, WorkflowFormat format)
+      throws StreamReadException, DatabindException, IOException {
     Collection<Error> validationErrors = schemaObject.validate(value);
     if (!validationErrors.isEmpty()) {
       throw new IllegalArgumentException(
           validationErrors.stream().map(Error::toString).collect(Collectors.joining("\n")));
     }
-    return format.mapper().convertValue(value, Workflow.class);
+    return format.mapper().treeToValue(value, Workflow.class);
   }
 }

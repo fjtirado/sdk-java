@@ -216,12 +216,12 @@ public class WorkflowReader {
   }
 
   /**
-   * Returns the default {@link WorkflowReaderOperations} instance (no validation).
+   * Returns the default {@link WorkflowReaderOperations} instance
    *
    * @return the default reader
    */
   private static WorkflowReaderOperations defaultReader() {
-    return NoValidationHolder.instance;
+    return ValidationHolder.instance;
   }
 
   private WorkflowReader() {}

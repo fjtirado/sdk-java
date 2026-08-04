@@ -17,6 +17,7 @@ package io.serverlessworkflow.fluent.spec;
 
 import io.serverlessworkflow.api.types.ForTask;
 import io.serverlessworkflow.api.types.ForTaskConfiguration;
+import io.serverlessworkflow.api.types.In;
 import io.serverlessworkflow.api.types.TaskItem;
 import io.serverlessworkflow.fluent.spec.spi.ForEachTaskFluent;
 import java.util.List;
@@ -48,7 +49,7 @@ public class ForEachTaskBuilder<T extends BaseTaskItemListBuilder<T>>
   }
 
   public ForEachTaskBuilder<T> in(String in) {
-    this.forTaskConfiguration.setIn(in);
+    this.forTaskConfiguration.setIn(new In().withForInExpression(in));
     return this;
   }
 

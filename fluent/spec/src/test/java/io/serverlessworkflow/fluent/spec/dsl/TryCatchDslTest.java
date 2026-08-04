@@ -329,7 +329,7 @@ public class TryCatchDslTest {
     assertThat(tryTask).isNotNull();
     var cat = tryTask.getCatch();
     assertThat(cat).isNotNull();
-    assertThat(cat.getErrors().getWith().getDetails())
+    assertThat(cat.getErrors().getWith().getDetail())
         .isEqualTo("Enforcement Failure - invalid email");
   }
 
