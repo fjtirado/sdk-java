@@ -178,7 +178,7 @@ public abstract class BaseTryTaskBuilder<
     }
 
     public CatchErrorsBuilder details(final String details) {
-      this.errorFilter.setDetails(details);
+      this.errorFilter.setDetail(details);
       return this;
     }
 

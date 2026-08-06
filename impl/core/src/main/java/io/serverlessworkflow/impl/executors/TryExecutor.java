@@ -187,7 +187,7 @@ public class TryExecutor extends RegularTaskExecutor<TryTask> {
               taskContext,
               workflow.definition().application().modelFactory().fromAny(error))) {
         if (errorVariable != null) {
-          taskContext.variables().put(errorVariable, WorkflowErrorExpr.from(error));
+          taskContext.variables().put(errorVariable, error);
         }
         if (catchTaskExecutor.isPresent()) {
           completable =
@@ -213,14 +213,6 @@ public class TryExecutor extends RegularTaskExecutor<TryTask> {
     return CompletableFuture.failedFuture(e);
   }
 
-  private static record WorkflowErrorExpr(
-      String type, int status, String instance, String title, String details) {
-    static WorkflowErrorExpr from(WorkflowError error) {
-      return new WorkflowErrorExpr(
-          error.type(), error.status(), error.instance(), error.title(), error.detail());
-    }
-  }
-
   private static Optional<Predicate<WorkflowError>> buildErrorFilter(CatchErrors errors) {
     return errors != null
         ? Optional.of(error -> filterError(error, errors.getWith()))
@@ -232,7 +224,7 @@ public class TryExecutor extends RegularTaskExecutor<TryTask> {
         && (errorFilter.getStatus() <= 0 || error.status() == errorFilter.getStatus())
         && compareString(errorFilter.getInstance(), error.instance())
         && compareString(errorFilter.getTitle(), error.title())
-        && compareString(errorFilter.getDetails(), error.detail());
+        && compareString(errorFilter.getDetail(), error.detail());
   }
 
   private static boolean compareString(String one, String other) {
