@@ -42,6 +42,7 @@
                 <useTitleAsClassname>true</useTitleAsClassname>
                 <serializable>true</serializable>
                 <targetVersion>${java.version}</targetVersion>
+                <formatTypeMapping><uri-reference>java.net.URI</uri-reference></formatTypeMapping>
                 <usePrimitives>true</usePrimitives>
                 <annotationStyle>none</annotationStyle>
                 <useJakartaValidation>true</useJakartaValidation>
