@@ -20,10 +20,8 @@ import io.serverlessworkflow.api.types.RunTaskConfiguration;
 import io.serverlessworkflow.api.types.Shell;
 import io.serverlessworkflow.impl.WorkflowDefinition;
 import io.serverlessworkflow.impl.WorkflowUtils;
-import java.util.LinkedHashMap;
-import java.util.Map;
+import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 public class RunShellExecutorBuilder implements RunnableTaskBuilder<RunShell> {
 
@@ -37,19 +35,10 @@ public class RunShellExecutorBuilder implements RunnableTaskBuilder<RunShell> {
         WorkflowUtils.buildStringFilter(
             definition.application(), taskConfiguration.getShell().getCommand()),
         shell.getArguments() != null
-            ? shell.getArguments().getAdditionalProperties().entrySet().stream()
-                .collect(
-                    Collectors.toMap(
-                        e -> WorkflowUtils.buildStringFilter(definition.application(), e.getKey()),
-                        e ->
-                            e.getValue() != null
-                                ? Optional.of(
-                                    WorkflowUtils.buildStringFilter(
-                                        definition.application(), e.getValue().toString()))
-                                : Optional.empty(),
-                        (x, y) -> y,
-                        LinkedHashMap::new))
-            : Map.of(),
+            ? shell.getArguments().stream()
+                .map(s -> WorkflowUtils.buildStringFilter(definition.application(), s))
+                .toList()
+            : List.of(),
         shell.getEnvironment() != null
             ? Optional.of(
                 WorkflowUtils.buildMapResolver(

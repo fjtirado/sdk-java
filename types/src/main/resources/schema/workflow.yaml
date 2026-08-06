@@ -924,10 +924,11 @@ $defs:
                       title: ShellStdin
                       description: A runtime expression, if any, to the shell command as standard input (stdin).
                     arguments:
-                      type: object
+                      type: array
                       title: ShellArguments
-                      description: A list of the arguments of the shell command to run.
-                      additionalProperties: true
+                      description: A list of the arguments, if any, of the shell command to run.
+                      items:
+                        type: string
                     environment:
                       type: object
                       title: ShellEnvironment
@@ -1454,14 +1455,14 @@ $defs:
   uriTemplate:
     title: UriTemplate
     anyOf:
-     - title: LiteralUriTemplate
-       type: string
-       format: uri-template
-       pattern: "^(?!\\s*\\$\\{)(?=\\S)(([^:/?#]+):)?(//([^/?#\\s]*))?([^?#\\s]*)(\\?([^#\\s]*))?(#(\\S*))?$"
-     - title: LiteralUri
-       type: string
-       format: uri-reference
-       pattern: "^(?!\\s*\\$\\{)(?=\\S)(([^:/?#]+):)?(//([^/?#\\s]*))?([^?#\\s]*)(\\?([^#\\s]*))?(#(\\S*))?$"
+      - title: LiteralUriTemplate
+        type: string
+        format: uri-template
+        pattern: "^(?!\\s*\\$\\{)(?=\\S)(([^:/?#]+):)?(//([^/?#\\s]*))?([^?#\\s]*)(\\?([^#\\s]*))?(#(\\S*))?$"
+      - title: LiteralUri
+        type: string
+        format: uri-reference
+        pattern: "^(?!\\s*\\$\\{)(?=\\S)(([^:/?#]+):)?(//([^/?#\\s]*))?([^?#\\s]*)(\\?([^#\\s]*))?(#(\\S*))?$"
   endpoint:
     title: Endpoint
     description: Represents an endpoint.

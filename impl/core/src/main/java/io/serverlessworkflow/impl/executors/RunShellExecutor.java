@@ -23,23 +23,22 @@ import io.serverlessworkflow.impl.WorkflowContext;
 import io.serverlessworkflow.impl.WorkflowModel;
 import io.serverlessworkflow.impl.WorkflowValueResolver;
 import io.serverlessworkflow.impl.scripts.ScriptUtils;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
 public class RunShellExecutor implements CallableTask {
   private final WorkflowValueResolver<String> shellCommand;
-  private final Map<WorkflowValueResolver<String>, Optional<WorkflowValueResolver<String>>>
-      shellArguments;
+  private final List<WorkflowValueResolver<String>> shellArguments;
   private final Optional<WorkflowValueResolver<Map<String, Object>>> shellEnv;
   private final Optional<ProcessReturnType> returnType;
 
   public RunShellExecutor(
       WorkflowValueResolver<String> shellCommand,
-      Map<WorkflowValueResolver<String>, Optional<WorkflowValueResolver<String>>> shellArguments,
+      List<WorkflowValueResolver<String>> shellArguments,
       Optional<WorkflowValueResolver<Map<String, Object>>> shellEnv,
       Optional<ProcessReturnType> returnType) {
-    super();
     this.shellCommand = shellCommand;
     this.shellArguments = shellArguments;
     this.shellEnv = shellEnv;
@@ -49,16 +48,21 @@ public class RunShellExecutor implements CallableTask {
   @Override
   public CompletableFuture<WorkflowModel> apply(
       WorkflowContext workflowContext, TaskContext taskContext, WorkflowModel model) {
-    StringBuilder commandBuilder =
-        new StringBuilder(shellCommand.apply(workflowContext, taskContext, model));
-    for (var entry : shellArguments.entrySet()) {
-      commandBuilder.append(" ").append(entry.getKey().apply(workflowContext, taskContext, model));
-      entry
-          .getValue()
-          .ifPresent(
-              v -> commandBuilder.append("=").append(v.apply(workflowContext, taskContext, model)));
+
+    String command = shellCommand.apply(workflowContext, taskContext, model);
+    if (!workflowContext.definition().application().allowedCommands().contains(command)) {
+      return CompletableFuture.failedFuture(
+          new IllegalAccessException(
+              "Command "
+                  + command
+                  + " is not allowed. Please verify the set of allowed commands passed to the application"));
     }
-    ProcessBuilder builder = new ProcessBuilder("sh", "-c", commandBuilder.toString());
+
+    List<String> commandAndArgs = new java.util.ArrayList<>();
+    commandAndArgs.add(command);
+    shellArguments.forEach(f -> commandAndArgs.add(f.apply(workflowContext, taskContext, model)));
+
+    ProcessBuilder builder = new ProcessBuilder(commandAndArgs);
     shellEnv.ifPresent(
         map -> ScriptUtils.addEnviromment(builder, map.apply(workflowContext, taskContext, model)));
 
