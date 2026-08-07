@@ -34,6 +34,7 @@ import java.time.Duration;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
 import org.awaitility.Awaitility;
@@ -180,6 +181,82 @@ public class RetryTimeoutTest {
                 app.workflowDefinition(
                         readWorkflowFromClasspath(
                             "workflows-samples/try-catch-retry-reusable.yaml"))
+                    .instance(Map.of())
+                    .start()
+                    .join())
+        .hasCauseInstanceOf(WorkflowException.class);
+  }
+
+  @Test
+  void testAttemptDuration() throws IOException {
+    apiServer.enqueue(
+        new MockResponse()
+            .setHeadersDelay(2, TimeUnit.SECONDS)
+            .setResponseCode(200)
+            .setHeader("Content-Type", "application/json")
+            .setBody("{}"));
+    assertThatThrownBy(
+            () ->
+                app.workflowDefinition(
+                        readWorkflowFromClasspath(
+                            "workflows-samples/try-catch-retry-attempt-duration.yaml"))
+                    .instance(Map.of())
+                    .start()
+                    .join())
+        .hasCauseInstanceOf(WorkflowException.class);
+  }
+
+  @Test
+  void testAttemptDurationRetry() throws IOException {
+    String result = "{\"name\":\"Luna\"}";
+    apiServer.enqueue(
+        new MockResponse()
+            .setHeadersDelay(2, TimeUnit.SECONDS)
+            .setResponseCode(200)
+            .setHeader("Content-Type", "application/json")
+            .setBody(result));
+    apiServer.enqueue(
+        new MockResponse()
+            .setResponseCode(200)
+            .setHeader("Content-Type", "application/json")
+            .setBody(result));
+    CompletableFuture<WorkflowModel> future =
+        app.workflowDefinition(
+                readWorkflowFromClasspath(
+                    "workflows-samples/try-catch-retry-attempt-duration-retry.yaml"))
+            .instance(Map.of())
+            .start();
+    Awaitility.await().atMost(Duration.ofSeconds(5)).until(future::isDone);
+    assertThat(future.join().as(String.class).orElseThrow()).isEqualTo(result);
+    assertThat(retryListener.taskRetried).hasSize(1);
+    assertThat(retryListener.taskRetried.get("do/0/tryGetPet/try/0/getPet")).isEqualTo((short) 1);
+  }
+
+  @Test
+  void testAttemptDurationOverall() throws IOException {
+    String result = "{\"name\":\"Luna\"}";
+    apiServer.enqueue(
+        new MockResponse()
+            .setHeadersDelay(1, TimeUnit.SECONDS)
+            .setResponseCode(200)
+            .setHeader("Content-Type", "application/json")
+            .setBody(result));
+    apiServer.enqueue(
+        new MockResponse()
+            .setHeadersDelay(1, TimeUnit.SECONDS)
+            .setResponseCode(200)
+            .setHeader("Content-Type", "application/json")
+            .setBody(result));
+    apiServer.enqueue(
+        new MockResponse()
+            .setResponseCode(200)
+            .setHeader("Content-Type", "application/json")
+            .setBody(result));
+    assertThatThrownBy(
+            () ->
+                app.workflowDefinition(
+                        readWorkflowFromClasspath(
+                            "workflows-samples/try-catch-retry-attempt-duration-overall.yaml"))
                     .instance(Map.of())
                     .start()
                     .join())
