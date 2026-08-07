@@ -1,0 +1,37 @@
+document:
+  dsl: '1.0.0'
+  namespace: test
+  name: try-catch-retry-inline-then
+  version: '0.1.0'
+do:
+  - tryGetPet:
+      try:
+        - getPet:
+            call: http
+            with:
+              method: get
+              endpoint: http://localhost:9797
+              redirect: true
+      catch:
+        errors:
+          with:
+            type: https://serverlessworkflow.io/spec/1.0.0/errors/communication
+            status: 404
+        then:
+            endGracefully
+        retry:
+          delay:
+            milliseconds: 10
+          backoff:
+            exponential: {}
+          limit:
+            attempt:
+              count: 5
+  - failWontHappen:
+          raise:
+            error:
+              type: https://serverlessworkflow.io/errors/runtime
+              status: 500
+  - endGracefully:
+           set:
+            recovered: true
