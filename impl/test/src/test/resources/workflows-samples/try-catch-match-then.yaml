@@ -1,0 +1,24 @@
+document:
+  dsl: '1.0.0'
+  namespace: test
+  name: try-catch-match-then
+  version: '0.1.0'
+do:
+  - attemptTask:
+      try:
+          - failingTask:
+                  raise:
+                      error:
+                          type: https://example.com/errors/transient
+                          status: 503
+      catch:
+          when: ${ .status == 503 }
+          then: endGracefully
+  - failWontHappen:
+      raise:
+        error:
+          type: https://serverlessworkflow.io/errors/runtime
+          status: 500
+  - endGracefully:
+      set:
+        recovered: true

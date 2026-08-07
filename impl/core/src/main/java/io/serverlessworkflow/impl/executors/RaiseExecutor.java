@@ -42,7 +42,8 @@ public class RaiseExecutor extends RegularTaskExecutor<RaiseTask> {
 
   private final BiFunction<WorkflowContext, TaskContext, WorkflowError> errorBuilder;
 
-  public static class RaiseExecutorBuilder extends RegularTaskExecutorBuilder<RaiseTask> {
+  public static class RaiseExecutorBuilder
+      extends RegularTaskExecutorBuilder<RaiseTask, RaiseExecutor> {
 
     private final BiFunction<WorkflowContext, TaskContext, WorkflowError> errorBuilder;
     private final WorkflowValueResolver<String> typeFilter;

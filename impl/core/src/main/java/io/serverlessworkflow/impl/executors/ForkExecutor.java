@@ -39,7 +39,8 @@ public class ForkExecutor extends RegularTaskExecutor<ForkTask> {
 
   private final boolean compete;
 
-  public static class ForkExecutorBuilder extends RegularTaskExecutorBuilder<ForkTask> {
+  public static class ForkExecutorBuilder
+      extends RegularTaskExecutorBuilder<ForkTask, ForkExecutor> {
 
     private final Map<String, TaskExecutor<?>> taskExecutors;
     private final boolean compete;

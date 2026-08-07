@@ -28,7 +28,7 @@ public class DoExecutor extends RegularTaskExecutor<DoTask> {
 
   private final TaskExecutor<?> taskExecutor;
 
-  public static class DoExecutorBuilder extends RegularTaskExecutorBuilder<DoTask> {
+  public static class DoExecutorBuilder extends RegularTaskExecutorBuilder<DoTask, DoExecutor> {
     private TaskExecutor<?> taskExecutor;
 
     protected DoExecutorBuilder(

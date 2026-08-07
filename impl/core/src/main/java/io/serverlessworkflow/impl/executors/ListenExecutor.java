@@ -47,7 +47,8 @@ public abstract class ListenExecutor extends RegularTaskExecutor<ListenTask> {
   protected final Function<CloudEvent, WorkflowModel> converter;
   protected final EventConsumer eventConsumer;
 
-  public static class ListenExecutorBuilder extends RegularTaskExecutorBuilder<ListenTask> {
+  public static class ListenExecutorBuilder
+      extends RegularTaskExecutorBuilder<ListenTask, ListenExecutor> {
 
     private EventRegistrationBuilderInfo registrationInfo;
     private TaskExecutor<?> loop;

@@ -28,12 +28,14 @@ public abstract class RegularTaskExecutor<T extends TaskBase> extends AbstractTa
 
   protected TransitionInfo transition;
 
-  protected RegularTaskExecutor(RegularTaskExecutorBuilder<T> builder) {
+  protected <V extends RegularTaskExecutor<T>> RegularTaskExecutor(
+      RegularTaskExecutorBuilder<T, V> builder) {
     super(builder);
   }
 
-  public abstract static class RegularTaskExecutorBuilder<T extends TaskBase>
-      extends AbstractTaskExecutorBuilder<T, RegularTaskExecutor<T>> {
+  public abstract static class RegularTaskExecutorBuilder<
+          T extends TaskBase, V extends RegularTaskExecutor<T>>
+      extends AbstractTaskExecutorBuilder<T, V> {
 
     private TransitionInfoBuilder transition;
 
@@ -42,12 +44,13 @@ public abstract class RegularTaskExecutor<T extends TaskBase> extends AbstractTa
       super(position, task, definition);
     }
 
+    @Override
     public void connect(Map<String, TaskExecutorBuilder<?>> connections) {
       this.transition = next(task.getThen(), connections);
     }
 
     @Override
-    protected void buildTransition(RegularTaskExecutor<T> instance) {
+    protected void buildTransition(V instance) {
       instance.transition = TransitionInfo.build(transition);
     }
   }
@@ -59,10 +62,8 @@ public abstract class RegularTaskExecutor<T extends TaskBase> extends AbstractTa
 
   protected CompletableFuture<TaskContext> execute(
       WorkflowContext workflow, TaskContext taskContext) {
-    CompletableFuture<TaskContext> future =
-        internalExecute(workflow, taskContext)
-            .thenApply(node -> taskContext.rawOutput(node).transition(transition));
-    return future;
+    return internalExecute(workflow, taskContext)
+        .thenApply(node -> taskContext.rawOutput(node).transition(transition));
   }
 
   protected abstract CompletableFuture<WorkflowModel> internalExecute(

@@ -233,6 +233,43 @@ public class RetryTimeoutTest {
   }
 
   @Test
+  void testAttemptRetryThen() throws IOException {
+    apiServer.enqueue(new MockResponse().setResponseCode(404));
+    apiServer.enqueue(new MockResponse().setResponseCode(404));
+    apiServer.enqueue(
+        new MockResponse()
+            .setResponseCode(200)
+            .setHeader("Content-Type", "application/json")
+            .setBody(JsonUtils.mapper().writeValueAsString("{}")));
+    CompletableFuture<WorkflowModel> future =
+        app.workflowDefinition(
+                readWorkflowFromClasspath("workflows-samples/try-catch-retry-inline-then.yaml"))
+            .instance(Map.of())
+            .start();
+    assertThatThrownBy(() -> future.join()).hasCauseInstanceOf(WorkflowException.class);
+  }
+
+  @Test
+  void testAttemptRetryThenCatch() throws IOException {
+    apiServer.enqueue(new MockResponse().setResponseCode(404));
+    apiServer.enqueue(new MockResponse().setResponseCode(404));
+    apiServer.enqueue(new MockResponse().setResponseCode(404));
+    apiServer.enqueue(new MockResponse().setResponseCode(404));
+    apiServer.enqueue(new MockResponse().setResponseCode(404));
+    apiServer.enqueue(new MockResponse().setResponseCode(404));
+    assertThat(
+            app.workflowDefinition(
+                    readWorkflowFromClasspath("workflows-samples/try-catch-retry-inline-then.yaml"))
+                .instance(Map.of())
+                .start()
+                .join()
+                .asMap()
+                .map(m -> m.get("recovered"))
+                .orElseThrow())
+        .isEqualTo(true);
+  }
+
+  @Test
   void testAttemptDurationOverall() throws IOException {
     String result = "{\"name\":\"Luna\"}";
     apiServer.enqueue(
@@ -280,6 +317,7 @@ public class RetryTimeoutTest {
   @ValueSource(
       strings = {
         "workflows-samples/try-catch-match-when.yaml",
+        "workflows-samples/try-catch-match-then.yaml",
         "workflows-samples/try-catch-match-status.yaml",
         "workflows-samples/try-catch-match-details.yaml"
       })

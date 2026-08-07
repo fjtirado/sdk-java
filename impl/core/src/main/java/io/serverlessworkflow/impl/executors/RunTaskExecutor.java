@@ -33,7 +33,8 @@ public class RunTaskExecutor extends RegularTaskExecutor<RunTask> {
   private static final ServiceLoader<RunnableTaskBuilder> runnables =
       ServiceLoader.load(RunnableTaskBuilder.class);
 
-  public static class RunTaskExecutorBuilder extends RegularTaskExecutorBuilder<RunTask> {
+  public static class RunTaskExecutorBuilder
+      extends RegularTaskExecutorBuilder<RunTask, RunTaskExecutor> {
     private CallableTask runnable;
 
     protected RunTaskExecutorBuilder(
