@@ -9,5 +9,5 @@ do:
         shell:
           command: echo
           arguments: 
-            - Javierito rulezzzz!!!!
+            - Open Workflow
         return: none

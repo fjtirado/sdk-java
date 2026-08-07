@@ -71,7 +71,7 @@ public class RunShellExecutorTest {
                     .instance(new Input(new User("John Doe")))
                     .start()
                     .join())
-        .hasCauseInstanceOf(IllegalAccessException.class);
+        .hasCauseInstanceOf(SecurityException.class);
   }
 
   @Test

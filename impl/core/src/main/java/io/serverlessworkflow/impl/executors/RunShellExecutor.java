@@ -23,6 +23,7 @@ import io.serverlessworkflow.impl.WorkflowContext;
 import io.serverlessworkflow.impl.WorkflowModel;
 import io.serverlessworkflow.impl.WorkflowValueResolver;
 import io.serverlessworkflow.impl.scripts.ScriptUtils;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -52,13 +53,13 @@ public class RunShellExecutor implements CallableTask {
     String command = shellCommand.apply(workflowContext, taskContext, model);
     if (!workflowContext.definition().application().allowedCommands().contains(command)) {
       return CompletableFuture.failedFuture(
-          new IllegalAccessException(
+          new SecurityException(
               "Command "
                   + command
                   + " is not allowed. Please verify the set of allowed commands passed to the application"));
     }
 
-    List<String> commandAndArgs = new java.util.ArrayList<>();
+    List<String> commandAndArgs = new ArrayList<>();
     commandAndArgs.add(command);
     shellArguments.forEach(f -> commandAndArgs.add(f.apply(workflowContext, taskContext, model)));
 

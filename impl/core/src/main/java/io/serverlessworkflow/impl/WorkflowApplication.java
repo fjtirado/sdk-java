@@ -149,7 +149,7 @@ public class WorkflowApplication implements AutoCloseable {
     this.allStrategyCorrelationInfoFactory = builder.allStrategyCorrelationInfoFactory;
     this.lifeCycleCloudEventFactory = builder.lifeCycleCloudEventFactory;
     this.schedulerExecutorService = builder.schedulerExecutorService;
-    this.allowedCommands = builder.allowedCommands;
+    this.allowedCommands = Collections.unmodifiableSet(builder.allowedCommands);
   }
 
   public TaskExecutorFactory taskFactory() {
@@ -277,7 +277,7 @@ public class WorkflowApplication implements AutoCloseable {
     private WorkflowLifeCycleCloudEventFactory lifeCycleCloudEventFactory;
     private CronResolverFactory cronResolverFactory;
     private ScheduledExecutorService schedulerExecutorService;
-    private Set<String> allowedCommands = new HashSet<String>();
+    private Set<String> allowedCommands = new HashSet<>();
 
     private Builder() {
       ServiceLoader.load(NamedWorkflowAdditionalObject.class)
