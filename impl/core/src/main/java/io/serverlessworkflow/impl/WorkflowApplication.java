@@ -70,6 +70,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.ServiceLoader;
 import java.util.ServiceLoader.Provider;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -112,6 +113,7 @@ public class WorkflowApplication implements AutoCloseable {
   private final AllStrategyCorrelationInfoFactory allStrategyCorrelationInfoFactory;
   private final WorkflowLifeCycleCloudEventFactory lifeCycleCloudEventFactory;
   private final ScheduledExecutorService schedulerExecutorService;
+  private final Set<String> allowedCommands;
 
   private WorkflowApplication(Builder builder) {
     this.taskFactory = builder.taskFactory;
@@ -147,6 +149,7 @@ public class WorkflowApplication implements AutoCloseable {
     this.allStrategyCorrelationInfoFactory = builder.allStrategyCorrelationInfoFactory;
     this.lifeCycleCloudEventFactory = builder.lifeCycleCloudEventFactory;
     this.schedulerExecutorService = builder.schedulerExecutorService;
+    this.allowedCommands = Collections.unmodifiableSet(builder.allowedCommands);
   }
 
   public TaskExecutorFactory taskFactory() {
@@ -274,6 +277,7 @@ public class WorkflowApplication implements AutoCloseable {
     private WorkflowLifeCycleCloudEventFactory lifeCycleCloudEventFactory;
     private CronResolverFactory cronResolverFactory;
     private ScheduledExecutorService schedulerExecutorService;
+    private Set<String> allowedCommands = new HashSet<>();
 
     private Builder() {
       ServiceLoader.load(NamedWorkflowAdditionalObject.class)
@@ -393,6 +397,16 @@ public class WorkflowApplication implements AutoCloseable {
 
     public Builder withModelFactory(WorkflowModelFactory modelFactory) {
       this.modelFactory = modelFactory;
+      return this;
+    }
+
+    public Builder withAllowedCommand(String command) {
+      this.allowedCommands.add(command);
+      return this;
+    }
+
+    public Builder withAllowedCommands(Collection<String> commands) {
+      this.allowedCommands.addAll(commands);
       return this;
     }
 
@@ -689,5 +703,9 @@ public class WorkflowApplication implements AutoCloseable {
 
   public WorkflowLifeCycleCloudEventFactory lifeCycleCloudEventFactory() {
     return lifeCycleCloudEventFactory;
+  }
+
+  public Set<String> allowedCommands() {
+    return allowedCommands;
   }
 }

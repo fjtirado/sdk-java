@@ -1,13 +1,11 @@
 document:
   dsl: '1.0.1'
   namespace: test
-  name: echo
+  name: echo-invalid
   version: '0.1.0'
 do:
   - runShell:
       run:
         shell:
-          command: 'echo'
-          arguments: 
-            - Hello, anonymous
+          command: 'echo "Hello, anonymous"'
         return: all
