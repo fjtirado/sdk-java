@@ -31,7 +31,7 @@ public class SetExecutor extends RegularTaskExecutor<SetTask> {
 
   private final WorkflowFilter setFilter;
 
-  public static class SetExecutorBuilder extends RegularTaskExecutorBuilder<SetTask> {
+  public static class SetExecutorBuilder extends RegularTaskExecutorBuilder<SetTask, SetExecutor> {
 
     private final WorkflowFilter setFilter;
 

@@ -29,7 +29,7 @@ public class CallTaskExecutor<T extends TaskBase> extends RegularTaskExecutor<T>
   private final CallableTask callable;
 
   public static class CallTaskExecutorBuilder<T extends TaskBase>
-      extends RegularTaskExecutorBuilder<T> {
+      extends RegularTaskExecutorBuilder<T, CallTaskExecutor<T>> {
     private CallableTaskFactory callableFactory;
     private List<CallableTaskProxyBuilder> callableProxyBuilders;
     private CallableTask callable;

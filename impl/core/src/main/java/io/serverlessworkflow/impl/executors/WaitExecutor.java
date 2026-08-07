@@ -32,7 +32,8 @@ public class WaitExecutor extends RegularTaskExecutor<WaitTask> {
 
   private final WorkflowValueResolver<Duration> durationResolver;
 
-  public static class WaitExecutorBuilder extends RegularTaskExecutorBuilder<WaitTask> {
+  public static class WaitExecutorBuilder
+      extends RegularTaskExecutorBuilder<WaitTask, WaitExecutor> {
     private WorkflowValueResolver<Duration> durationResolver;
 
     protected WaitExecutorBuilder(

@@ -53,7 +53,8 @@ public class EmitExecutor extends RegularTaskExecutor<EmitTask> {
           .toList();
   private final EventPropertiesBuilder props;
 
-  public static class EmitExecutorBuilder extends RegularTaskExecutorBuilder<EmitTask> {
+  public static class EmitExecutorBuilder
+      extends RegularTaskExecutorBuilder<EmitTask, EmitExecutor> {
 
     private EventPropertiesBuilder eventBuilder;
 

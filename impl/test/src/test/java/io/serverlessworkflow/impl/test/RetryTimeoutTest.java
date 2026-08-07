@@ -280,6 +280,7 @@ public class RetryTimeoutTest {
   @ValueSource(
       strings = {
         "workflows-samples/try-catch-match-when.yaml",
+        "workflows-samples/try-catch-match-then.yaml",
         "workflows-samples/try-catch-match-status.yaml",
         "workflows-samples/try-catch-match-details.yaml"
       })

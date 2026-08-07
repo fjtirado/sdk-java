@@ -37,7 +37,7 @@ public class ForExecutor extends RegularTaskExecutor<ForTask> {
   private final Optional<WorkflowPredicate> whileExpr;
   private final TaskExecutor<?> taskExecutor;
 
-  public static class ForExecutorBuilder extends RegularTaskExecutorBuilder<ForTask> {
+  public static class ForExecutorBuilder extends RegularTaskExecutorBuilder<ForTask, ForExecutor> {
     private TaskExecutor<?> taskExecutor;
 
     protected ForExecutorBuilder(
