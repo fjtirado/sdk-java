@@ -114,6 +114,7 @@ public class WorkflowApplication implements AutoCloseable {
   private final WorkflowLifeCycleCloudEventFactory lifeCycleCloudEventFactory;
   private final ScheduledExecutorService schedulerExecutorService;
   private final Set<String> allowedCommands;
+  private final Map<Class<?>, List<?>> serviceLoadedClasses = new ConcurrentHashMap<>();
 
   private WorkflowApplication(Builder builder) {
     this.taskFactory = builder.taskFactory;
@@ -707,5 +708,17 @@ public class WorkflowApplication implements AutoCloseable {
 
   public Set<String> allowedCommands() {
     return allowedCommands;
+  }
+
+  @SuppressWarnings("unchecked")
+  public <T> List<T> serviceLoadedClasses(Class<T> clazz) {
+    return (List<T>)
+        serviceLoadedClasses.computeIfAbsent(
+            clazz,
+            c ->
+                ServiceLoader.load(clazz).stream()
+                    .map(ServiceLoader.Provider::get)
+                    .sorted()
+                    .toList());
   }
 }

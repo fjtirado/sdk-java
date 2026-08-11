@@ -30,15 +30,11 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.ServiceLoader;
-import java.util.concurrent.ConcurrentHashMap;
 
 public class HttpExecutorBuilder {
 
   public static final String HTTP_REQUEST_DECORATOR_KEY = "HttpRequestDecorators";
   private final WorkflowDefinition definition;
-  private static final Map<String, List<HttpRequestDecorator>> appRequestDecorators =
-      new ConcurrentHashMap<>();
   private List<HttpRequestDecorator> requestDecorators;
   private WorkflowValueResolver<URI> pathSupplier;
   private Object body;
@@ -51,20 +47,13 @@ public class HttpExecutorBuilder {
   private HttpExecutorBuilder(WorkflowDefinition definition) {
     this.definition = definition;
     this.requestDecorators =
-        appRequestDecorators.computeIfAbsent(
-            definition.application().id(),
-            __ -> {
-              List<HttpRequestDecorator> result = new ArrayList<>();
-              result.addAll(
-                  definition
-                      .application()
-                      .<Collection<HttpRequestDecorator>>additionalObject(
-                          HTTP_REQUEST_DECORATOR_KEY)
-                      .orElse(List.of()));
-              ServiceLoader.load(HttpRequestDecorator.class).forEach(result::add);
-              Collections.sort(result);
-              return result;
-            });
+        new ArrayList<>(definition.application().serviceLoadedClasses(HttpRequestDecorator.class));
+    requestDecorators.addAll(
+        definition
+            .application()
+            .<Collection<HttpRequestDecorator>>additionalObject(HTTP_REQUEST_DECORATOR_KEY)
+            .orElse(List.of()));
+    Collections.sort(requestDecorators);
   }
 
   public HttpExecutorBuilder withAuth(ReferenceableAuthenticationPolicy policy) {
