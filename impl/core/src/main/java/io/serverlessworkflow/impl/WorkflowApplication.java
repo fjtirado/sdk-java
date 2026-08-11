@@ -711,7 +711,7 @@ public class WorkflowApplication implements AutoCloseable {
   }
 
   @SuppressWarnings("unchecked")
-  public <T> List<T> serviceLoadedClasses(Class<T> clazz) {
+  public <T extends Comparable<?>> List<T> serviceLoadedClasses(Class<T> clazz) {
     return (List<T>)
         serviceLoadedClasses.computeIfAbsent(
             clazz,
@@ -720,5 +720,13 @@ public class WorkflowApplication implements AutoCloseable {
                     .map(ServiceLoader.Provider::get)
                     .sorted()
                     .toList());
+  }
+
+  public <T extends Comparable<?>> T serviceLoadedClass(Class<T> serviceClass) {
+    List<T> list = serviceLoadedClasses(serviceClass);
+    if (list.isEmpty()) {
+      throw new IllegalStateException("No " + serviceClass + " implementation found");
+    }
+    return list.get(0);
   }
 }

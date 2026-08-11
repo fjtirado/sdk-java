@@ -77,12 +77,11 @@ public abstract class CommonOAuthProvider implements AuthProvider {
       AuthRequestBuilder authBuilder,
       WorkflowApplication app) {
     AccessTokenProvider tokenProvider =
-        app.serviceLoadedClasses(AccessTokenProviderFactory.class)
-            .get(0)
+        app.serviceLoadedClass(AccessTokenProviderFactory.class)
             .build(
                 authBuilder.apply(authenticationData),
                 authenticationData.getIssuers(),
-                app.serviceLoadedClasses(JWTConverter.class).get(0));
+                app.serviceLoadedClass(JWTConverter.class));
     return (w, t, m) -> tokenProvider;
   }
 
@@ -91,12 +90,11 @@ public abstract class CommonOAuthProvider implements AuthProvider {
     return (w, t, m) -> {
       Map<String, Object> secret = secret(w, secretName);
       String issuers = (String) secret.get("issuers");
-      return app.serviceLoadedClasses(AccessTokenProviderFactory.class)
-          .get(0)
+      return app.serviceLoadedClass(AccessTokenProviderFactory.class)
           .build(
               authBuilder.apply(secret),
               issuers != null ? Arrays.asList(issuers.split(",")) : null,
-              app.serviceLoadedClasses(JWTConverter.class).get(0));
+              app.serviceLoadedClass(JWTConverter.class));
     };
   }
 }
