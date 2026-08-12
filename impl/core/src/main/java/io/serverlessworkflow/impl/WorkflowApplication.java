@@ -114,7 +114,7 @@ public class WorkflowApplication implements AutoCloseable {
   private final WorkflowLifeCycleCloudEventFactory lifeCycleCloudEventFactory;
   private final ScheduledExecutorService schedulerExecutorService;
   private final Set<String> allowedCommands;
-  private final Map<Class<?>, List<?>> serviceLoadedClasses = new ConcurrentHashMap<>();
+  private final Map<Class<?>, ServiceLoader<?>> servicesLoaded = new ConcurrentHashMap<>();
 
   private WorkflowApplication(Builder builder) {
     this.taskFactory = builder.taskFactory;
@@ -712,21 +712,19 @@ public class WorkflowApplication implements AutoCloseable {
 
   @SuppressWarnings("unchecked")
   public <T extends Comparable<?>> List<T> serviceLoadedClasses(Class<T> clazz) {
-    return (List<T>)
-        serviceLoadedClasses.computeIfAbsent(
-            clazz,
-            c ->
-                ServiceLoader.load(clazz).stream()
-                    .map(ServiceLoader.Provider::get)
-                    .sorted()
-                    .toList());
+    ServiceLoader<?> serviceLoader = servicesLoaded.computeIfAbsent(clazz, ServiceLoader::load);
+    return (List<T>) serviceLoader.stream().map(ServiceLoader.Provider::get).sorted().toList();
   }
 
   public <T extends Comparable<?>> T serviceLoadedClass(Class<T> serviceClass) {
-    List<T> list = serviceLoadedClasses(serviceClass);
-    if (list.isEmpty()) {
-      throw new IllegalStateException("No " + serviceClass + " implementation found");
-    }
-    return list.get(0);
+    ServiceLoader<?> serviceLoader =
+        servicesLoaded.computeIfAbsent(serviceClass, ServiceLoader::load);
+    return (T)
+        serviceLoader.stream()
+            .map(ServiceLoader.Provider::get)
+            .sorted()
+            .findFirst()
+            .orElseThrow(
+                () -> new IllegalStateException("No " + serviceClass + " implementation found"));
   }
 }
