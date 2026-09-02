@@ -51,6 +51,18 @@ public interface WorkflowInstance extends WorkflowInstanceData {
 
   boolean resume();
 
+  default CompletableFuture<Boolean> suspendFuture() {
+    return CompletableFuture.completedFuture(suspend());
+  }
+
+  default CompletableFuture<Boolean> cancelFuture() {
+    return CompletableFuture.completedFuture(cancel());
+  }
+
+  default CompletableFuture<Boolean> resumeFuture() {
+    return CompletableFuture.completedFuture(resume());
+  }
+
   <T> T addMetadataIfAbsent(String key, Supplier<T> supplier);
 
   void removeMetadata(String key);
