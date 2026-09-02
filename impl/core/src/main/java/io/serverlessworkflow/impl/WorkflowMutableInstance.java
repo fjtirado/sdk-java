@@ -234,13 +234,29 @@ public class WorkflowMutableInstance implements WorkflowInstance {
 
   @Override
   public boolean suspend() {
+    boolean result = _suspend();
+    if (result) {
+      publishEvent(
+          workflowContext, l -> l.onWorkflowSuspended(new WorkflowSuspendedEvent(workflowContext)));
+    }
+    return result;
+  }
+
+  @Override
+  public CompletableFuture<Boolean> suspendFuture() {
+    return _suspend()
+        ? publishEvent(
+                workflowContext,
+                l -> l.onWorkflowSuspended(new WorkflowSuspendedEvent(workflowContext)))
+            .thenApply(__ -> true)
+        : CompletableFuture.completedFuture(false);
+  }
+
+  private boolean _suspend() {
     try {
       statusLock.lock();
       if (TaskExecutorHelper.isActive(status.get()) && suspended == null) {
         internalSuspend();
-        publishEvent(
-            workflowContext,
-            l -> l.onWorkflowSuspended(new WorkflowSuspendedEvent(workflowContext)));
         return true;
       } else {
         return false;
@@ -257,11 +273,29 @@ public class WorkflowMutableInstance implements WorkflowInstance {
 
   @Override
   public boolean resume() {
+    boolean result = _resume();
+    if (result) {
+      publishEvent(
+          workflowContext, l -> l.onWorkflowResumed(new WorkflowResumedEvent(workflowContext)));
+    }
+    return result;
+  }
+
+  @Override
+  public CompletableFuture<Boolean> resumeFuture() {
+    return _resume()
+        ? publishEvent(
+                workflowContext,
+                l -> l.onWorkflowResumed(new WorkflowResumedEvent(workflowContext)))
+            .thenApply(__ -> true)
+        : CompletableFuture.completedFuture(false);
+  }
+
+  private boolean _resume() {
     boolean result;
     try {
       statusLock.lock();
       if (TaskExecutorHelper.isActive(status.get()) && suspended != null) {
-
         suspended.forEach(
             (k, v) -> {
               k.complete(v);
@@ -273,10 +307,6 @@ public class WorkflowMutableInstance implements WorkflowInstance {
       }
     } finally {
       statusLock.unlock();
-    }
-    if (result) {
-      publishEvent(
-          workflowContext, l -> l.onWorkflowResumed(new WorkflowResumedEvent(workflowContext)));
     }
     return result;
   }
@@ -314,6 +344,25 @@ public class WorkflowMutableInstance implements WorkflowInstance {
 
   @Override
   public boolean cancel() {
+    boolean result = _cancel();
+    if (result) {
+      publishEvent(
+          workflowContext, l -> l.onWorkflowCancelled(new WorkflowCancelledEvent(workflowContext)));
+    }
+    return result;
+  }
+
+  @Override
+  public CompletableFuture<Boolean> cancelFuture() {
+    return _cancel()
+        ? publishEvent(
+                workflowContext,
+                l -> l.onWorkflowCancelled(new WorkflowCancelledEvent(workflowContext)))
+            .thenApply(__ -> true)
+        : CompletableFuture.completedFuture(false);
+  }
+
+  private boolean _cancel() {
     boolean result;
     Collection<CompletableFuture<?>> toCancel = null;
     try {
@@ -330,8 +379,6 @@ public class WorkflowMutableInstance implements WorkflowInstance {
       statusLock.unlock();
     }
     if (result) {
-      publishEvent(
-          workflowContext, l -> l.onWorkflowCancelled(new WorkflowCancelledEvent(workflowContext)));
       if (toCancel != null) {
         toCancel.forEach(t -> t.cancel(true));
       }
