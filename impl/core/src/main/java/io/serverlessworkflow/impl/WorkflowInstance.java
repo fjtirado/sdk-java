@@ -15,6 +15,7 @@
  */
 package io.serverlessworkflow.impl;
 
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Supplier;
 
@@ -63,7 +64,19 @@ public interface WorkflowInstance extends WorkflowInstanceData {
     return CompletableFuture.completedFuture(resume());
   }
 
-  <T> T addMetadataIfAbsent(String key, Supplier<T> supplier);
+  default <T> T addMetadataIfAbsent(String key, Supplier<T> supplier) {
+    return supplier.get();
+  }
 
-  void removeMetadata(String key);
+  default void removeMetadata(String key) {}
+
+  /**
+   * Remove metadata key if present and return a non-empty optional if the deleted object matches
+   * the specified class type
+   */
+  default <T> Optional<T> removeMetadata(String key, Class<T> clazz) {
+    Optional<T> value = findMetadata(key, clazz);
+    removeMetadata(key);
+    return value;
+  }
 }
