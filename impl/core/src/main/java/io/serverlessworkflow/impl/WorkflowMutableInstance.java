@@ -29,6 +29,7 @@ import io.serverlessworkflow.impl.lifecycle.WorkflowSuspendedEvent;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CancellationException;
@@ -450,6 +451,17 @@ public class WorkflowMutableInstance implements WorkflowInstance {
   @Override
   public <T> T addMetadataIfAbsent(String key, Supplier<T> supplier) {
     return (T) additionalObjects.computeIfAbsent(key, k -> supplier.get());
+  }
+
+  @Override
+  public <T> Optional<T> removeMetadata(String key, Class<T> clazz) {
+    Object value = additionalObjects.remove(key);
+    return clazz.isInstance(value) ? Optional.of(clazz.cast(value)) : Optional.empty();
+  }
+
+  @Override
+  public Map<String, Object> metadata() {
+    return Collections.unmodifiableMap(additionalObjects);
   }
 
   @Override

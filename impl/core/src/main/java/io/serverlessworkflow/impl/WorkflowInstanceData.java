@@ -16,6 +16,7 @@
 package io.serverlessworkflow.impl;
 
 import java.time.Instant;
+import java.util.Map;
 import java.util.Optional;
 
 public interface WorkflowInstanceData {
@@ -31,5 +32,11 @@ public interface WorkflowInstanceData {
 
   WorkflowModel context();
 
-  <T> Optional<T> findMetadata(String key, Class<T> objectClass);
+  default <T> Optional<T> findMetadata(String key, Class<T> objectClass) {
+    return Optional.empty();
+  }
+
+  default Map<String, Object> metadata() {
+    return Map.of();
+  }
 }
