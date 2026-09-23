@@ -34,12 +34,19 @@ import io.serverlessworkflow.impl.persistence.CompletedTaskInfo;
 import io.serverlessworkflow.impl.persistence.PersistenceInstanceInfo;
 import io.serverlessworkflow.impl.persistence.PersistenceTaskInfo;
 import io.serverlessworkflow.impl.persistence.RetriedTaskInfo;
+import io.serverlessworkflow.impl.persistence.hashing.HashFactory;
+import io.serverlessworkflow.impl.persistence.hashing.HashItem;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.net.URI;
 import java.time.OffsetDateTime;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.Callable;
+import java.util.concurrent.locks.Lock;
 
 public abstract class BytesMapInstanceTransaction
     extends BigMapInstanceTransaction<byte[], byte[], byte[], byte[], byte[], byte[]> {
@@ -47,24 +54,40 @@ public abstract class BytesMapInstanceTransaction
   private static final byte VERSION_0 = 0;
   private static final byte VERSION_1 = 1;
   private static final byte VERSION_2 = 2;
-  private static final byte[] PROCESSED_VALUE = new byte[] {1};
+  private static final byte VERSION_3 = 3;
+  private static final byte[] PROCESSED_VALUE = {1};
 
-  private final WorkflowBufferFactory factory;
+  private final WorkflowBufferFactory bufferFactory;
+  private final HashFactory hashFactory;
+  private final Lock hashLock;
 
-  protected BytesMapInstanceTransaction(WorkflowBufferFactory factory) {
-    this.factory = factory;
+  protected BytesMapInstanceTransaction(
+      WorkflowBufferFactory factory, HashFactory hashFactory, Lock hashLock) {
+    this.bufferFactory = factory;
+    this.hashFactory = hashFactory;
+    this.hashLock = hashLock;
+  }
+
+  protected abstract Map<String, byte[]> blobData(String instanceId);
+
+  protected abstract void removeBlobData(String instanceId);
+
+  @Override
+  public void removeProcessInstance(WorkflowContextData workflowContext) {
+    super.removeProcessInstance(workflowContext);
+    removeBlobData(workflowContext.instanceData().id());
   }
 
   @Override
   protected byte[] marshallTaskCompleted(WorkflowContextData contextData, TaskContext taskContext) {
 
     try (ByteArrayOutputStream bytes = new ByteArrayOutputStream();
-        WorkflowOutputBuffer writer = factory.output(bytes)) {
-      writer.writeByte(VERSION_2);
+        WorkflowOutputBuffer writer = bufferFactory.output(bytes)) {
+      writer.writeByte(VERSION_3);
       writer.writeEnum(TaskStatus.COMPLETED);
       writer.writeInstant(taskContext.completedAt());
-      writeModel(writer, taskContext.output());
-      writeModel(writer, contextData.context());
+      writeLargeObject(contextData.instanceData(), writer, taskContext.output());
+      writeLargeObject(contextData.instanceData(), writer, contextData.context());
       TransitionInfo transition = taskContext.transition();
       writer.writeBoolean(transition.isEndNode());
       AbstractTaskExecutor<?> next = (AbstractTaskExecutor<?>) transition.next();
@@ -75,16 +98,37 @@ public abstract class BytesMapInstanceTransaction
         writer.writeString(next.position().jsonPointer());
       }
       writer.writeInt(taskContext.iteration());
+      writeMetadata(contextData.instanceData(), writer);
       return bytes.toByteArray();
     } catch (IOException e) {
       throw new UncheckedIOException(e);
     }
   }
 
+  private void writeMetadata(WorkflowInstanceData instanceData, WorkflowOutputBuffer writer) {
+    Map<String, Object> additionalObjects = new HashMap<>(instanceData.metadata());
+    writer.writeInt(additionalObjects.size());
+    additionalObjects.forEach(
+        (k, v) -> {
+          writer.writeString(k);
+          writeLargeObject(instanceData, writer, v);
+        });
+  }
+
+  private void writeLargeObject(
+      WorkflowInstanceData instanceData, WorkflowOutputBuffer writer, Object obj) {
+    final byte[] bytes = MarshallingUtils.writeObject(bufferFactory, obj);
+    hashFactory
+        .fromData(bytes)
+        .ifPresentOrElse(
+            item -> writeLargeObject(item, instanceData, writer, bytes),
+            () -> legacyWriteObject(writer, bytes));
+  }
+
   @Override
   protected byte[] marshallStatus(WorkflowStatus status) {
     try (ByteArrayOutputStream bytes = new ByteArrayOutputStream();
-        WorkflowOutputBuffer writer = factory.output(bytes)) {
+        WorkflowOutputBuffer writer = bufferFactory.output(bytes)) {
       writer.writeByte(VERSION_0);
       writer.writeEnum(status);
       return bytes.toByteArray();
@@ -95,45 +139,42 @@ public abstract class BytesMapInstanceTransaction
 
   @Override
   protected byte[] marshallInstance(WorkflowInstanceData instance) {
-
     try (ByteArrayOutputStream bytes = new ByteArrayOutputStream();
-        WorkflowOutputBuffer writer = factory.output(bytes)) {
-      writer.writeByte(VERSION_0);
+        WorkflowOutputBuffer writer = bufferFactory.output(bytes)) {
+      writer.writeByte(VERSION_1);
       writer.writeInstant(instance.startedAt());
-      writeModel(writer, instance.input());
+      writer.writeObject(instance.input());
+      writeMetadata(instance, writer);
       return bytes.toByteArray();
     } catch (IOException e) {
       throw new UncheckedIOException(e);
     }
   }
 
-  protected void writeModel(WorkflowOutputBuffer writer, WorkflowModel model) {
-    writer.writeObject(model);
-  }
-
   protected byte[] marshallApplicationId(String id) {
-    return MarshallingUtils.writeString(factory, id);
+    return MarshallingUtils.writeString(bufferFactory, id);
   }
 
   protected String unmarshallApplicationId(byte[] value) {
-    return MarshallingUtils.readString(factory, value);
+    return MarshallingUtils.readString(bufferFactory, value);
   }
 
   @Override
   protected byte[] marshallTaskRetried(
       WorkflowContextData workflowContext, TaskContext taskContext) {
     ByteArrayOutputStream bytes = new ByteArrayOutputStream();
-    try (WorkflowOutputBuffer writer = factory.output(bytes)) {
-      writer.writeByte(VERSION_2);
+    try (WorkflowOutputBuffer writer = bufferFactory.output(bytes)) {
+      writer.writeByte(VERSION_3);
       writer.writeEnum(TaskStatus.RETRIED);
       writer.writeInt(taskContext.retryAttempt());
+      writeMetadata(workflowContext.instanceData(), writer);
     }
     return bytes.toByteArray();
   }
 
   @Override
-  protected PersistenceTaskInfo unmarshallTaskInfo(byte[] taskData) {
-    try (WorkflowInputBuffer buffer = factory.input(new ByteArrayInputStream(taskData))) {
+  protected PersistenceTaskInfo unmarshallTaskInfo(String instanceId, byte[] taskData) {
+    try (WorkflowInputBuffer buffer = bufferFactory.input(new ByteArrayInputStream(taskData))) {
       byte version = buffer.readByte();
       switch (version) {
         case VERSION_0:
@@ -142,9 +183,38 @@ public abstract class BytesMapInstanceTransaction
           return readVersion1(buffer);
         case VERSION_2:
           return readVersion2(buffer);
+        case VERSION_3:
+          return readVersion3(instanceId, buffer);
       }
       throw new UnsupportedOperationException("Unknown version " + version);
     }
+  }
+
+  private PersistenceTaskInfo readVersion3(String instanceId, WorkflowInputBuffer buffer) {
+    TaskStatus taskStatus = buffer.readEnum(TaskStatus.class);
+    switch (taskStatus) {
+      case COMPLETED:
+        return new CompletedTaskInfo(
+            buffer.readInstant(),
+            (WorkflowModel) readLargeObject(instanceId, buffer),
+            (WorkflowModel) readLargeObject(instanceId, buffer),
+            buffer.readBoolean(),
+            buffer.readBoolean() ? buffer.readString() : null,
+            buffer.readInt(),
+            readMetadata(instanceId, buffer));
+      case RETRIED:
+        return new RetriedTaskInfo(buffer.readInt(), readMetadata(instanceId, buffer));
+    }
+    throw new UnsupportedOperationException("Unknown status " + taskStatus);
+  }
+
+  private Map<String, Object> readMetadata(String instanceId, WorkflowInputBuffer buffer) {
+    int size = buffer.readInt();
+    Map<String, Object> map = new HashMap<>(size);
+    while (size-- > 0) {
+      map.put(buffer.readString(), readLargeObject(instanceId, buffer));
+    }
+    return map;
   }
 
   private PersistenceTaskInfo readVersion2(WorkflowInputBuffer buffer) {
@@ -184,17 +254,74 @@ public abstract class BytesMapInstanceTransaction
         buffer.readBoolean() ? buffer.readString() : null);
   }
 
+  protected abstract <T> T executeNewTransaction(Callable<T> runnable);
+
+  private void writeLargeObject(
+      HashItem item, WorkflowInstanceData instanceData, WorkflowOutputBuffer writer, byte[] bytes) {
+
+    boolean duplicated;
+    String key = item.key();
+    hashLock.lock();
+    try {
+      duplicated =
+          executeNewTransaction(
+              () -> {
+                Map<String, byte[]> map = blobData(instanceData.id());
+                byte[] value = map.get(key);
+                if (value == null) {
+                  map.put(key, bytes);
+                  return false;
+                } else {
+                  return !Arrays.equals(value, bytes);
+                }
+              });
+    } finally {
+      hashLock.unlock();
+    }
+
+    if (duplicated) {
+      legacyWriteObject(writer, bytes);
+    } else {
+      writer.writeByte(item.id());
+      item.writeKey(writer);
+    }
+  }
+
+  private Object readLargeObject(String instanceId, WorkflowInputBuffer buffer) {
+    return hashFactory
+        .fromBuffer(buffer.readByte(), buffer)
+        .map(
+            item -> {
+              Map<String, byte[]> map = blobData(instanceId);
+              ByteArrayInputStream bytes = new ByteArrayInputStream(map.get(item.key()));
+              try (WorkflowInputBuffer input = bufferFactory.input(bytes)) {
+                return input.readObject();
+              }
+            })
+        .orElseGet(() -> buffer.readObject());
+  }
+
+  private void legacyWriteObject(WorkflowOutputBuffer writer, byte[] bytes) {
+    writer.writeByte(HashItem.HASHING_DISABLED).writeRawBytes(bytes);
+  }
+
   @Override
-  protected PersistenceInstanceInfo unmarshallInstanceInfo(byte[] instanceData) {
-    try (WorkflowInputBuffer buffer = factory.input(new ByteArrayInputStream(instanceData))) {
-      buffer.readByte(); // version byte not used at the moment
-      return new PersistenceInstanceInfo(buffer.readInstant(), (WorkflowModel) buffer.readObject());
+  protected PersistenceInstanceInfo unmarshallInstanceInfo(String instanceId, byte[] instanceData) {
+    try (WorkflowInputBuffer buffer = bufferFactory.input(new ByteArrayInputStream(instanceData))) {
+      byte version = buffer.readByte(); // version byte not used at the moment
+
+      return version == VERSION_1
+          ? new PersistenceInstanceInfo(
+              buffer.readInstant(),
+              (WorkflowModel) buffer.readObject(),
+              readMetadata(instanceId, buffer))
+          : new PersistenceInstanceInfo(buffer.readInstant(), (WorkflowModel) buffer.readObject());
     }
   }
 
   @Override
   protected WorkflowStatus unmarshallStatus(byte[] statusData) {
-    try (WorkflowInputBuffer buffer = factory.input(new ByteArrayInputStream(statusData))) {
+    try (WorkflowInputBuffer buffer = bufferFactory.input(new ByteArrayInputStream(statusData))) {
       buffer.readByte(); // version byte not used at the moment
       return buffer.readEnum(WorkflowStatus.class);
     }
@@ -202,7 +329,7 @@ public abstract class BytesMapInstanceTransaction
 
   protected byte[] marshallCloudEvent(CloudEvent event) {
     try (ByteArrayOutputStream bytes = new ByteArrayOutputStream();
-        WorkflowOutputBuffer writer = factory.output(bytes)) {
+        WorkflowOutputBuffer writer = bufferFactory.output(bytes)) {
       writer.writeEnum(event.getSpecVersion());
       writer.writeString(event.getId());
       writer.writeString(event.getType());
@@ -221,7 +348,7 @@ public abstract class BytesMapInstanceTransaction
 
   protected CloudEvent unmarshallCloudEvent(byte[] eventData) {
     try (ByteArrayInputStream bytes = new ByteArrayInputStream(eventData);
-        WorkflowInputBuffer reader = factory.input(bytes)) {
+        WorkflowInputBuffer reader = bufferFactory.input(bytes)) {
       CloudEventBuilder builder =
           CloudEventBuilder.fromSpecVersion(reader.readEnum(SpecVersion.class));
       builder.withId(reader.readString());

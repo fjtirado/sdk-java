@@ -15,20 +15,37 @@
  */
 package io.serverlessworkflow.impl.persistence.mvstore;
 
+import io.serverlessworkflow.impl.marshaller.DefaultBufferFactory;
 import io.serverlessworkflow.impl.persistence.PersistenceInstanceStore;
+import io.serverlessworkflow.impl.persistence.hashing.DefaultHashFactory;
+import io.serverlessworkflow.impl.persistence.hashing.HashFactory;
 import io.serverlessworkflow.impl.persistence.test.AbstractPersistenceTest;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import org.junit.jupiter.api.AfterEach;
 
-class MVStorePersistenceStoreTest extends AbstractPersistenceTest {
+class NonHashingMVStorePersistenceStoreTest extends AbstractPersistenceTest {
 
   private static final String DB_NAME = "dbtest.db";
 
   @Override
   protected PersistenceInstanceStore persistenceStore() {
-    return new MVStorePersistenceStore(DB_NAME);
+    return new MVStorePersistenceStore(DB_NAME, DefaultBufferFactory.factory(), hashFactory());
+  }
+
+  protected HashFactory hashFactory() {
+    return new DefaultHashFactory() {
+      @Override
+      protected boolean intCondition(byte[] data) {
+        return false;
+      }
+
+      @Override
+      protected boolean md5Condition(byte[] data) {
+        return false;
+      }
+    };
   }
 
   @AfterEach

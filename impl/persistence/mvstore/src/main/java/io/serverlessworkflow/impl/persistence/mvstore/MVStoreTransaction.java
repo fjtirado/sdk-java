@@ -20,22 +20,35 @@ import io.serverlessworkflow.api.types.Workflow;
 import io.serverlessworkflow.impl.WorkflowDefinitionData;
 import io.serverlessworkflow.impl.marshaller.WorkflowBufferFactory;
 import io.serverlessworkflow.impl.persistence.bigmap.BytesMapInstanceTransaction;
+import io.serverlessworkflow.impl.persistence.hashing.HashFactory;
+import java.util.ArrayDeque;
+import java.util.Deque;
 import java.util.Map;
+import java.util.concurrent.Callable;
+import java.util.concurrent.locks.Lock;
 import org.h2.mvstore.MVStore;
 import org.h2.mvstore.tx.Transaction;
 import org.h2.mvstore.tx.TransactionMap;
+import org.h2.mvstore.tx.TransactionStore;
 
 public class MVStoreTransaction extends BytesMapInstanceTransaction {
 
   protected static final String ID_SEPARATOR = "-";
   private static final String PROCESSED_PREFIX = "PROCESSED" + ID_SEPARATOR;
 
-  private final Transaction transaction;
+  private final TransactionStore transactionStore;
+  private final Deque<Transaction> transactionStack = new ArrayDeque<>();
   private final MVStore store;
 
-  public MVStoreTransaction(MVStore store, Transaction transaction, WorkflowBufferFactory factory) {
-    super(factory);
-    this.transaction = transaction;
+  public MVStoreTransaction(
+      MVStore store,
+      TransactionStore transactionStore,
+      WorkflowBufferFactory bufferFactory,
+      HashFactory hashFactory,
+      Lock hashLock) {
+    super(bufferFactory, hashFactory, hashLock);
+    this.transactionStore = transactionStore;
+    transactionStack.add(transactionStore.begin());
     this.store = store;
   }
 
@@ -59,18 +72,22 @@ public class MVStoreTransaction extends BytesMapInstanceTransaction {
     return openMap(workflowContext, "status");
   }
 
+  private Transaction currentTransaction() {
+    return transactionStack.peekLast();
+  }
+
   @Override
   public void removeTasks(String instanceId) {
-    transaction.removeMap(taskMap(instanceId));
+    currentTransaction().removeMap(taskMap(instanceId));
   }
 
   private TransactionMap<String, byte[]> taskMap(String instanceId) {
-    return transaction.openMap(mapTaskName(instanceId));
+    return currentTransaction().openMap(mapTaskName(instanceId));
   }
 
   private Map<String, byte[]> openMap(WorkflowDefinitionData workflowDefinition, String suffix) {
-    return transaction.openMap(
-        identifier(workflowDefinition.workflow(), ID_SEPARATOR) + ID_SEPARATOR + suffix);
+    return currentTransaction()
+        .openMap(identifier(workflowDefinition.workflow(), ID_SEPARATOR) + ID_SEPARATOR + suffix);
   }
 
   private String mapTaskName(String instanceId) {
@@ -79,33 +96,58 @@ public class MVStoreTransaction extends BytesMapInstanceTransaction {
 
   @Override
   public void commit(WorkflowDefinitionData definition) {
-    transaction.commit();
+    currentTransaction().commit();
   }
 
   @Override
   public void rollback(WorkflowDefinitionData definition) {
-    transaction.rollback();
+    currentTransaction().rollback();
   }
 
   @Override
   protected Map<String, byte[]> applicationData() {
-    return transaction.openMap("APPLICATION");
+    return currentTransaction().openMap("APPLICATION");
   }
 
   @Override
   protected Map<String, byte[]> cloudEvents(String regId) {
-    return transaction.openMap("CLOUDEVENTS" + ID_SEPARATOR + regId);
+    return currentTransaction().openMap("CLOUDEVENTS" + ID_SEPARATOR + regId);
   }
 
   @Override
   protected Map<String, byte[]> processedCloudEvents(String regId) {
-    return transaction.openMap(PROCESSED_PREFIX + regId);
+    return currentTransaction().openMap(PROCESSED_PREFIX + regId);
   }
 
   @Override
   protected void deleteAllProcessedMaps() {
     store.getMapNames().stream()
         .filter(s -> s.startsWith(PROCESSED_PREFIX))
-        .forEach(s -> transaction.removeMap(transaction.openMap(s)));
+        .forEach(s -> currentTransaction().removeMap(currentTransaction().openMap(s)));
+  }
+
+  @Override
+  protected Map<String, byte[]> blobData(String instanceId) {
+    return currentTransaction().openMap(instanceId + ID_SEPARATOR + "blobs");
+  }
+
+  @Override
+  protected void removeBlobData(String instanceId) {
+    currentTransaction().removeMap((TransactionMap<?, ?>) blobData(instanceId));
+  }
+
+  @Override
+  protected <T> T executeNewTransaction(Callable<T> runnable) {
+    transactionStack.add(transactionStore.begin());
+    try {
+      T result = runnable.call();
+      commit(null);
+      return result;
+    } catch (Exception ex) {
+      rollback(null);
+      throw new IllegalStateException(ex);
+    } finally {
+      transactionStack.pollLast();
+    }
   }
 }

@@ -76,6 +76,7 @@ public abstract class AbstractHandlerPersistenceTest {
     when(workflowContext.context()).thenReturn(context);
     when(workflowContext.definition()).thenReturn(definition);
     when(workflowContext.instanceData()).thenReturn(workflowInstance);
+    when(workflowInstance.metadata()).thenReturn(Map.of("Javierito", "rules"));
     when(workflowInstance.startedAt()).thenReturn(beforeStart.plus(Duration.ofMillis(1)));
     when(workflowInstance.context()).thenReturn(context);
     when(workflowInstance.id()).thenReturn(app.idFactory().get());
@@ -182,6 +183,7 @@ public abstract class AbstractHandlerPersistenceTest {
     verify(updateTContext).transition(transition.capture());
     assertThat(transition.getValue().isEndNode()).isTrue();
     assertThat(instance.incIteration(position2)).isEqualTo(3);
+    assertThat(instance.metadata()).isEqualTo(Map.of("Javierito", "rules"));
 
     // workflow completed
     handlers.writer().completed(workflowContext).join();
