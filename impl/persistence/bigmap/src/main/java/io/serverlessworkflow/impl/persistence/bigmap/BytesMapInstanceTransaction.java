@@ -33,20 +33,21 @@ import io.serverlessworkflow.impl.marshaller.WorkflowOutputBuffer;
 import io.serverlessworkflow.impl.persistence.CompletedTaskInfo;
 import io.serverlessworkflow.impl.persistence.PersistenceInstanceInfo;
 import io.serverlessworkflow.impl.persistence.PersistenceTaskInfo;
+import io.serverlessworkflow.impl.persistence.PersistenceUtils;
 import io.serverlessworkflow.impl.persistence.RetriedTaskInfo;
 import io.serverlessworkflow.impl.persistence.hashing.HashFactory;
 import io.serverlessworkflow.impl.persistence.hashing.HashItem;
+import io.serverlessworkflow.impl.persistence.hashing.HashMappingCoordinator;
+import io.serverlessworkflow.impl.persistence.hashing.HashMappingInfo;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.net.URI;
 import java.time.OffsetDateTime;
-import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
-import java.util.concurrent.Callable;
-import java.util.concurrent.locks.Lock;
 
 public abstract class BytesMapInstanceTransaction
     extends BigMapInstanceTransaction<byte[], byte[], byte[], byte[], byte[], byte[]> {
@@ -56,16 +57,37 @@ public abstract class BytesMapInstanceTransaction
   private static final byte VERSION_2 = 2;
   private static final byte VERSION_3 = 3;
   private static final byte[] PROCESSED_VALUE = {1};
+  private static final String SEPARATOR = ":";
 
   private final WorkflowBufferFactory bufferFactory;
   private final HashFactory hashFactory;
-  private final Lock hashLock;
+  protected final HashMappingCoordinator hashCoordinator;
 
-  protected BytesMapInstanceTransaction(
-      WorkflowBufferFactory factory, HashFactory hashFactory, Lock hashLock) {
+  protected BytesMapInstanceTransaction(WorkflowBufferFactory factory, HashFactory hashFactory) {
     this.bufferFactory = factory;
     this.hashFactory = hashFactory;
-    this.hashLock = hashLock;
+    this.hashCoordinator =
+        HashMappingCoordinator.build(this::retrieveBlobData, this::writeBlobData);
+  }
+
+  private Map<String, List<byte[]>> retrieveBlobData(String instanceId) {
+    Map<String, Map<Integer, byte[]>> result = new HashMap<>();
+    for (Map.Entry<String, byte[]> entry : blobData(instanceId).entrySet()) {
+      String[] splitted = entry.getKey().split(SEPARATOR);
+      result
+          .computeIfAbsent(splitted[0], __ -> new HashMap<>())
+          .put(Integer.parseInt(splitted[1]), entry.getValue());
+    }
+    return PersistenceUtils.mapMapToMapList(result);
+  }
+
+  private void writeBlobData(Map<String, List<HashMappingInfo>> writeInfo) {
+    for (Map.Entry<String, List<HashMappingInfo>> entry : writeInfo.entrySet()) {
+      Map<String, byte[]> blobData = blobData(entry.getKey());
+      for (HashMappingInfo info : entry.getValue()) {
+        blobData.put(info.key() + SEPARATOR + info.index(), info.bytes());
+      }
+    }
   }
 
   protected abstract Map<String, byte[]> blobData(String instanceId);
@@ -75,7 +97,9 @@ public abstract class BytesMapInstanceTransaction
   @Override
   public void removeProcessInstance(WorkflowContextData workflowContext) {
     super.removeProcessInstance(workflowContext);
-    removeBlobData(workflowContext.instanceData().id());
+    String instanceId = workflowContext.instanceData().id();
+    removeBlobData(instanceId);
+    hashCoordinator.afterRemove(instanceId);
   }
 
   @Override
@@ -254,37 +278,12 @@ public abstract class BytesMapInstanceTransaction
         buffer.readBoolean() ? buffer.readString() : null);
   }
 
-  protected abstract <T> T executeNewTransaction(Callable<T> runnable);
-
   private void writeLargeObject(
       HashItem item, WorkflowInstanceData instanceData, WorkflowOutputBuffer writer, byte[] bytes) {
-
-    boolean duplicated;
-    String key = item.key();
-    hashLock.lock();
-    try {
-      duplicated =
-          executeNewTransaction(
-              () -> {
-                Map<String, byte[]> map = blobData(instanceData.id());
-                byte[] value = map.get(key);
-                if (value == null) {
-                  map.put(key, bytes);
-                  return false;
-                } else {
-                  return !Arrays.equals(value, bytes);
-                }
-              });
-    } finally {
-      hashLock.unlock();
-    }
-
-    if (duplicated) {
-      legacyWriteObject(writer, bytes);
-    } else {
-      writer.writeByte(item.id());
-      item.writeKey(writer);
-    }
+    int index = hashCoordinator.calculateIndex(instanceData.id(), item, bytes);
+    writer.writeByte(item.id());
+    item.writeKey(writer);
+    writer.writeShort((short) index);
   }
 
   private Object readLargeObject(String instanceId, WorkflowInputBuffer buffer) {
@@ -292,9 +291,12 @@ public abstract class BytesMapInstanceTransaction
         .fromBuffer(buffer.readByte(), buffer)
         .map(
             item -> {
-              Map<String, byte[]> map = blobData(instanceId);
-              ByteArrayInputStream bytes = new ByteArrayInputStream(map.get(item.key()));
-              try (WorkflowInputBuffer input = bufferFactory.input(bytes)) {
+              try (WorkflowInputBuffer input =
+                  bufferFactory.input(
+                      new ByteArrayInputStream(
+                          hashCoordinator
+                              .readBytes(instanceId, item, buffer.readShort())
+                              .orElseThrow()))) {
                 return input.readObject();
               }
             })

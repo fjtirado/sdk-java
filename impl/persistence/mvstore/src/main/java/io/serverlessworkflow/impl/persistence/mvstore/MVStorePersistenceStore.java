@@ -21,15 +21,12 @@ import io.serverlessworkflow.impl.persistence.PersistenceInstanceStore;
 import io.serverlessworkflow.impl.persistence.bigmap.BigMapInstanceTransaction;
 import io.serverlessworkflow.impl.persistence.hashing.DefaultHashFactory;
 import io.serverlessworkflow.impl.persistence.hashing.HashFactory;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
 import org.h2.mvstore.MVStore;
 import org.h2.mvstore.tx.TransactionStore;
 
 public class MVStorePersistenceStore implements PersistenceInstanceStore {
   private final TransactionStore transactionStore;
   private final MVStore mvStore;
-  private final Lock hashLock = new ReentrantLock();
   private final WorkflowBufferFactory bufferFactory;
   private final HashFactory hashFactory;
 
@@ -56,6 +53,6 @@ public class MVStorePersistenceStore implements PersistenceInstanceStore {
 
   @Override
   public BigMapInstanceTransaction<byte[], byte[], byte[], byte[], byte[], byte[]> begin() {
-    return new MVStoreTransaction(mvStore, transactionStore, bufferFactory, hashFactory, hashLock);
+    return new MVStoreTransaction(mvStore, transactionStore, bufferFactory, hashFactory);
   }
 }
