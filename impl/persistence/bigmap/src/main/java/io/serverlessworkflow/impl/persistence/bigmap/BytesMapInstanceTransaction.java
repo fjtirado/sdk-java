@@ -33,7 +33,6 @@ import io.serverlessworkflow.impl.marshaller.WorkflowOutputBuffer;
 import io.serverlessworkflow.impl.persistence.CompletedTaskInfo;
 import io.serverlessworkflow.impl.persistence.PersistenceInstanceInfo;
 import io.serverlessworkflow.impl.persistence.PersistenceTaskInfo;
-import io.serverlessworkflow.impl.persistence.PersistenceUtils;
 import io.serverlessworkflow.impl.persistence.RetriedTaskInfo;
 import io.serverlessworkflow.impl.persistence.hashing.HashFactory;
 import io.serverlessworkflow.impl.persistence.hashing.HashItem;
@@ -70,15 +69,13 @@ public abstract class BytesMapInstanceTransaction
         HashMappingCoordinator.build(this::retrieveBlobData, this::writeBlobData);
   }
 
-  private Map<String, List<byte[]>> retrieveBlobData(String instanceId) {
-    Map<String, Map<Integer, byte[]>> result = new HashMap<>();
+  private Map<String, Map<String, byte[]>> retrieveBlobData(String instanceId) {
+    Map<String, Map<String, byte[]>> result = new HashMap<>();
     for (Map.Entry<String, byte[]> entry : blobData(instanceId).entrySet()) {
       String[] splitted = entry.getKey().split(SEPARATOR);
-      result
-          .computeIfAbsent(splitted[0], __ -> new HashMap<>())
-          .put(Integer.parseInt(splitted[1]), entry.getValue());
+      result.computeIfAbsent(splitted[0], __ -> new HashMap<>()).put(splitted[1], entry.getValue());
     }
-    return PersistenceUtils.mapMapToMapList(result);
+    return result;
   }
 
   private void writeBlobData(Map<String, List<HashMappingInfo>> writeInfo) {
@@ -280,10 +277,10 @@ public abstract class BytesMapInstanceTransaction
 
   private void writeLargeObject(
       HashItem item, WorkflowInstanceData instanceData, WorkflowOutputBuffer writer, byte[] bytes) {
-    int index = hashCoordinator.calculateIndex(instanceData.id(), item, bytes);
+    String index = hashCoordinator.calculateIndex(instanceData.id(), item, bytes);
     writer.writeByte(item.id());
     item.writeKey(writer);
-    writer.writeShort((short) index);
+    writer.writeString(index);
   }
 
   private Object readLargeObject(String instanceId, WorkflowInputBuffer buffer) {
@@ -295,7 +292,7 @@ public abstract class BytesMapInstanceTransaction
                   bufferFactory.input(
                       new ByteArrayInputStream(
                           hashCoordinator
-                              .readBytes(instanceId, item, buffer.readShort())
+                              .readBytes(instanceId, item, buffer.readString())
                               .orElseThrow()))) {
                 return input.readObject();
               }

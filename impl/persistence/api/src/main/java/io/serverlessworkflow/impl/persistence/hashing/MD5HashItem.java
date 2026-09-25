@@ -23,7 +23,7 @@ import java.security.NoSuchAlgorithmException;
 public class MD5HashItem implements HashItem {
 
   public static final byte ID = 2;
-  public static final int SIZE_THRESHOLD = 128 * 2;
+  public static final int SIZE_THRESHOLD = 150;
 
   @Override
   public byte id() {

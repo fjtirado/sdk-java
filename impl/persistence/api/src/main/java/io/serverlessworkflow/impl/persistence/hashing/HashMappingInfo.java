@@ -15,4 +15,4 @@
  */
 package io.serverlessworkflow.impl.persistence.hashing;
 
-public record HashMappingInfo(String key, int index, byte[] bytes) {}
+public record HashMappingInfo(String key, String index, byte[] bytes) {}

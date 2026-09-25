@@ -22,7 +22,7 @@ import java.util.Arrays;
 public class IntegerHashItem implements HashItem {
 
   public static final byte ID = 1;
-  public static final int SIZE_THRESHOLD = 4 * 4;
+  public static final int SIZE_THRESHOLD = 32;
 
   private final int hashCode;
 

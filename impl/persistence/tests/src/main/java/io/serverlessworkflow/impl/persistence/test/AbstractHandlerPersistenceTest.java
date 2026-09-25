@@ -37,6 +37,7 @@ import io.serverlessworkflow.impl.WorkflowPosition;
 import io.serverlessworkflow.impl.executors.TransitionInfo;
 import io.serverlessworkflow.impl.persistence.PersistenceInstanceHandlers;
 import io.serverlessworkflow.impl.persistence.WorkflowPersistenceInstance;
+import io.serverlessworkflow.impl.persistence.hashing.HashMappingCoordinator;
 import java.io.IOException;
 import java.time.Duration;
 import java.time.Instant;
@@ -154,6 +155,8 @@ public abstract class AbstractHandlerPersistenceTest {
     verify(parentContext).tryRetryCount(retryAttempt.capture());
     assertThat(retryAttempt.getValue()).isEqualTo(numRetries);
 
+    HashMappingCoordinator.clearAll();
+
     // task completed
     handlers
         .writer()
@@ -163,6 +166,7 @@ public abstract class AbstractHandlerPersistenceTest {
       assertThat(stream.count()).isEqualTo(1);
     }
     definition.close();
+
     instance =
         (WorkflowPersistenceInstance)
             handlers.reader().find(definition, workflowInstance.id()).orElseThrow();
