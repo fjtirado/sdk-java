@@ -25,7 +25,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import org.junit.jupiter.api.AfterEach;
 
-class NonHashingMVStorePersistenceStoreTest extends AbstractPersistenceTest {
+class MVStorePersistenceStoreTest extends AbstractPersistenceTest {
 
   private static final String DB_NAME = "dbtest.db";
 

@@ -15,18 +15,37 @@
  */
 package io.serverlessworkflow.impl.persistence.hashing;
 
-import io.serverlessworkflow.impl.marshaller.WorkflowInputBuffer;
-import java.util.Optional;
+import com.github.f4b6a3.ulid.Ulid;
+import java.util.Objects;
 
-public interface HashFactory {
+public class DefaultHashIndex implements HashIndex {
 
-  Optional<HashItem> fromData(byte[] data);
+  private final Ulid ulid;
 
-  Optional<HashItem> fromBuffer(byte id, WorkflowInputBuffer buffer);
+  public DefaultHashIndex(Ulid ulid) {
+    this.ulid = ulid;
+  }
 
-  HashIndex indexFromBytes(byte[] bytes);
+  public String toString() {
+    return ulid.toString();
+  }
 
-  HashIndex indexFromString(String str);
+  @Override
+  public byte[] toBytes() {
+    return ulid.toBytes();
+  }
 
-  HashIndex newIndex();
+  @Override
+  public int hashCode() {
+    return Objects.hash(ulid);
+  }
+
+  @Override
+  public boolean equals(Object obj) {
+    if (this == obj) return true;
+    if (obj == null) return false;
+    if (getClass() != obj.getClass()) return false;
+    DefaultHashIndex other = (DefaultHashIndex) obj;
+    return Objects.equals(ulid, other.ulid);
+  }
 }

@@ -13,25 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.serverlessworkflow.impl.persistence.mvstore;
+package io.serverlessworkflow.impl.persistence.hashing;
 
-import io.serverlessworkflow.impl.persistence.hashing.DefaultHashFactory;
-import io.serverlessworkflow.impl.persistence.hashing.HashFactory;
+public interface HashIndex {
 
-public class HashingMVStorePersistenceTest extends MVStorePersistenceStoreTest {
+  String toString();
 
-  @Override
-  protected HashFactory hashFactory() {
-    return new DefaultHashFactory() {
-      @Override
-      protected boolean intCondition(byte[] data) {
-        return true;
-      }
-
-      @Override
-      protected boolean md5Condition(byte[] data) {
-        return false;
-      }
-    };
-  }
+  byte[] toBytes();
 }

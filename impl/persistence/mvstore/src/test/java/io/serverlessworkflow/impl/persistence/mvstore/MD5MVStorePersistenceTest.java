@@ -18,7 +18,7 @@ package io.serverlessworkflow.impl.persistence.mvstore;
 import io.serverlessworkflow.impl.persistence.hashing.DefaultHashFactory;
 import io.serverlessworkflow.impl.persistence.hashing.HashFactory;
 
-public class MD5MVStorePersistenceTest extends NonHashingMVStorePersistenceStoreTest {
+public class MD5MVStorePersistenceTest extends MVStorePersistenceStoreTest {
 
   @Override
   protected HashFactory hashFactory() {

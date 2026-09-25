@@ -15,10 +15,14 @@
  */
 package io.serverlessworkflow.impl.persistence.hashing;
 
+import com.github.f4b6a3.ulid.Ulid;
+import com.github.f4b6a3.ulid.UlidFactory;
 import io.serverlessworkflow.impl.marshaller.WorkflowInputBuffer;
 import java.util.Optional;
 
 public class DefaultHashFactory implements HashFactory {
+
+  private final UlidFactory idFactory = UlidFactory.newMonotonicInstance();
 
   @Override
   public Optional<HashItem> fromBuffer(byte id, WorkflowInputBuffer buffer) {
@@ -48,5 +52,20 @@ public class DefaultHashFactory implements HashFactory {
 
   protected boolean md5Condition(byte[] data) {
     return data.length > MD5HashItem.SIZE_THRESHOLD;
+  }
+
+  @Override
+  public HashIndex indexFromBytes(byte[] bytes) {
+    return new DefaultHashIndex(Ulid.from(bytes));
+  }
+
+  @Override
+  public HashIndex indexFromString(String str) {
+    return new DefaultHashIndex(Ulid.from(str));
+  }
+
+  @Override
+  public HashIndex newIndex() {
+    return new DefaultHashIndex(idFactory.create());
   }
 }

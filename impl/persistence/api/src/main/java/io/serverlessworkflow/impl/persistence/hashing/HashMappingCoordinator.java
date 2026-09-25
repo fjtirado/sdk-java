@@ -15,7 +15,6 @@
  */
 package io.serverlessworkflow.impl.persistence.hashing;
 
-import com.github.f4b6a3.ulid.UlidFactory;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -30,13 +29,15 @@ import java.util.stream.Collectors;
 
 public class HashMappingCoordinator {
 
-  private static final UlidFactory idFactory = UlidFactory.newMonotonicInstance();
-
   public static final HashMappingCoordinator build(
-      Function<String, Map<String, Map<String, byte[]>>> retriever,
+      HashFactory hashFactory,
+      Function<String, Map<String, Map<HashIndex, byte[]>>> retriever,
       Consumer<Map<String, List<HashMappingInfo>>> writer) {
-    return new HashMappingCoordinator(retriever, writer);
+    return new HashMappingCoordinator(hashFactory, retriever, writer);
   }
+
+  private static Map<String, Map<String, Map<HashIndex, BytesWithFlag>>> mappingInfo =
+      new ConcurrentHashMap<>();
 
   private static class BytesWithFlag {
     private final byte[] bytes;
@@ -61,20 +62,20 @@ public class HashMappingCoordinator {
     }
   }
 
-  private record PendingWrite(String key, String index, BytesWithFlag bytes) {}
+  private record PendingWrite(String key, HashIndex index, BytesWithFlag bytes) {}
 
-  private final Function<String, Map<String, Map<String, byte[]>>> retriever;
+  private final HashFactory hashFactory;
+  private final Function<String, Map<String, Map<HashIndex, byte[]>>> retriever;
   private final Consumer<Map<String, List<HashMappingInfo>>> writer;
 
   private HashMappingCoordinator(
-      Function<String, Map<String, Map<String, byte[]>>> retriever,
+      HashFactory hashFactory,
+      Function<String, Map<String, Map<HashIndex, byte[]>>> retriever,
       Consumer<Map<String, List<HashMappingInfo>>> writer) {
+    this.hashFactory = hashFactory;
     this.retriever = retriever;
     this.writer = writer;
   }
-
-  private static Map<String, Map<String, Map<String, BytesWithFlag>>> mappingInfo =
-      new ConcurrentHashMap<>();
 
   private Map<String, List<PendingWrite>> pending = new HashMap<>();
 
@@ -82,14 +83,14 @@ public class HashMappingCoordinator {
     return new HashMappingInfo(pending.key, pending.index, pending.bytes.bytes);
   }
 
-  public String calculateIndex(String instanceId, HashItem item, byte[] bytes) {
-    Map<String, Map<String, BytesWithFlag>> instanceMap = getInstanceMap(instanceId);
+  public HashIndex calculateIndex(String instanceId, HashItem item, byte[] bytes) {
+    Map<String, Map<HashIndex, BytesWithFlag>> instanceMap = getInstanceMap(instanceId);
     String key = item.key();
     synchronized (instanceMap) {
-      Map<String, BytesWithFlag> duplicateMap =
+      Map<HashIndex, BytesWithFlag> duplicateMap =
           instanceMap.computeIfAbsent(key, __ -> new HashMap<>());
 
-      for (Entry<String, BytesWithFlag> entry : duplicateMap.entrySet()) {
+      for (Entry<HashIndex, BytesWithFlag> entry : duplicateMap.entrySet()) {
         if (Arrays.equals(entry.getValue().bytes, bytes)) {
           if (entry.getValue().isTransient()) {
             addWrite(instanceId, key, entry.getKey(), entry.getValue());
@@ -97,7 +98,7 @@ public class HashMappingCoordinator {
           return entry.getKey();
         }
       }
-      String index = idFactory.create().toString();
+      HashIndex index = hashFactory.newIndex();
       BytesWithFlag bytesWithFlag = new BytesWithFlag(bytes);
       duplicateMap.put(index, bytesWithFlag);
       addWrite(instanceId, key, index, bytesWithFlag);
@@ -105,14 +106,14 @@ public class HashMappingCoordinator {
     }
   }
 
-  private void addWrite(String instanceId, String key, String index, BytesWithFlag bytes) {
+  private void addWrite(String instanceId, String key, HashIndex index, BytesWithFlag bytes) {
     pending
         .computeIfAbsent(instanceId, __ -> new ArrayList<>())
         .add(new PendingWrite(key, index, bytes));
   }
 
-  public Optional<byte[]> readBytes(String instanceId, HashItem item, String index) {
-    Map<String, Map<String, BytesWithFlag>> instanceMap = getInstanceMap(instanceId);
+  public Optional<byte[]> readBytes(String instanceId, HashItem item, HashIndex index) {
+    Map<String, Map<HashIndex, BytesWithFlag>> instanceMap = getInstanceMap(instanceId);
     synchronized (instanceMap) {
       return Optional.ofNullable(instanceMap.get(item.key()))
           .map(m -> m.get(index))
@@ -120,7 +121,7 @@ public class HashMappingCoordinator {
     }
   }
 
-  private Map<String, Map<String, BytesWithFlag>> getInstanceMap(String instanceId) {
+  private Map<String, Map<HashIndex, BytesWithFlag>> getInstanceMap(String instanceId) {
     return mappingInfo.computeIfAbsent(
         instanceId,
         k ->
@@ -142,7 +143,7 @@ public class HashMappingCoordinator {
       String instanceId = item.getKey();
       List<HashMappingInfo> list = new ArrayList<>();
       result.put(instanceId, list);
-      Map<String, Map<String, BytesWithFlag>> instanceMap = mappingInfo.get(instanceId);
+      Map<String, Map<HashIndex, BytesWithFlag>> instanceMap = mappingInfo.get(instanceId);
       if (instanceMap != null) {
         synchronized (instanceMap) {
           item.getValue()
@@ -161,7 +162,7 @@ public class HashMappingCoordinator {
   public void afterCommit() {
     for (Map.Entry<String, List<PendingWrite>> item : pending.entrySet()) {
       String instanceId = item.getKey();
-      Map<String, Map<String, BytesWithFlag>> instanceMap = mappingInfo.get(instanceId);
+      Map<String, Map<HashIndex, BytesWithFlag>> instanceMap = mappingInfo.get(instanceId);
       if (instanceMap != null) {
         synchronized (instanceMap) {
           item.getValue().forEach(v -> v.bytes.persist());

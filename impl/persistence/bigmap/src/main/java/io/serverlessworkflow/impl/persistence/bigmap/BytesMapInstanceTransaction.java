@@ -35,6 +35,7 @@ import io.serverlessworkflow.impl.persistence.PersistenceInstanceInfo;
 import io.serverlessworkflow.impl.persistence.PersistenceTaskInfo;
 import io.serverlessworkflow.impl.persistence.RetriedTaskInfo;
 import io.serverlessworkflow.impl.persistence.hashing.HashFactory;
+import io.serverlessworkflow.impl.persistence.hashing.HashIndex;
 import io.serverlessworkflow.impl.persistence.hashing.HashItem;
 import io.serverlessworkflow.impl.persistence.hashing.HashMappingCoordinator;
 import io.serverlessworkflow.impl.persistence.hashing.HashMappingInfo;
@@ -66,14 +67,17 @@ public abstract class BytesMapInstanceTransaction
     this.bufferFactory = factory;
     this.hashFactory = hashFactory;
     this.hashCoordinator =
-        HashMappingCoordinator.build(this::retrieveBlobData, this::writeBlobData);
+        HashMappingCoordinator.build(hashFactory, this::retrieveBlobData, this::writeBlobData);
   }
 
-  private Map<String, Map<String, byte[]>> retrieveBlobData(String instanceId) {
-    Map<String, Map<String, byte[]>> result = new HashMap<>();
+  private Map<String, Map<HashIndex, byte[]>> retrieveBlobData(String instanceId) {
+    Map<String, Map<HashIndex, byte[]>> result = new HashMap<>();
     for (Map.Entry<String, byte[]> entry : blobData(instanceId).entrySet()) {
-      String[] splitted = entry.getKey().split(SEPARATOR);
-      result.computeIfAbsent(splitted[0], __ -> new HashMap<>()).put(splitted[1], entry.getValue());
+      String key = entry.getKey();
+      int indexOf = key.indexOf(SEPARATOR);
+      result
+          .computeIfAbsent(key.substring(0, indexOf), __ -> new HashMap<>())
+          .put(hashFactory.indexFromString(key.substring(indexOf + 1)), entry.getValue());
     }
     return result;
   }
@@ -277,10 +281,10 @@ public abstract class BytesMapInstanceTransaction
 
   private void writeLargeObject(
       HashItem item, WorkflowInstanceData instanceData, WorkflowOutputBuffer writer, byte[] bytes) {
-    String index = hashCoordinator.calculateIndex(instanceData.id(), item, bytes);
+    HashIndex index = hashCoordinator.calculateIndex(instanceData.id(), item, bytes);
     writer.writeByte(item.id());
     item.writeKey(writer);
-    writer.writeString(index);
+    writer.writeBytes(index.toBytes());
   }
 
   private Object readLargeObject(String instanceId, WorkflowInputBuffer buffer) {
@@ -292,7 +296,8 @@ public abstract class BytesMapInstanceTransaction
                   bufferFactory.input(
                       new ByteArrayInputStream(
                           hashCoordinator
-                              .readBytes(instanceId, item, buffer.readString())
+                              .readBytes(
+                                  instanceId, item, hashFactory.indexFromBytes(buffer.readBytes()))
                               .orElseThrow()))) {
                 return input.readObject();
               }
