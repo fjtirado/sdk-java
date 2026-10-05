@@ -24,12 +24,16 @@ import io.serverlessworkflow.impl.WorkflowModel;
 import io.serverlessworkflow.impl.WorkflowMutableInstance;
 import io.serverlessworkflow.impl.WorkflowStatus;
 import io.serverlessworkflow.impl.executors.TransitionInfo;
+import java.util.HashSet;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
+import java.util.function.Supplier;
 
 public class WorkflowPersistenceInstance extends WorkflowMutableInstance {
 
   private final PersistenceWorkflowInfo info;
+  private Set<String> userMetaKeys = new HashSet<>();
 
   public static WorkflowInstance of(WorkflowDefinition definition, PersistenceWorkflowInfo info) {
     return definition
@@ -48,7 +52,7 @@ public class WorkflowPersistenceInstance extends WorkflowMutableInstance {
               }
             });
     this.startedAt = info.startedAt();
-    additionalObjects = info.metadata();
+    additionalObjects.putAll(info.metadata());
   }
 
   @Override
@@ -100,6 +104,43 @@ public class WorkflowPersistenceInstance extends WorkflowMutableInstance {
         searchContext = tryContext.parent();
       }
     }
-    taskInfo.additionalObjects().forEach(additionalObjects::put);
+    Set<String> retainKeys;
+    synchronized (userMetaKeys) {
+      retainKeys = new HashSet<>(userMetaKeys);
+      taskInfo
+          .additionalObjects()
+          .forEach(
+              (k, v) -> {
+                if (!retainKeys.contains(k)) {
+                  additionalObjects.put(k, v);
+                  retainKeys.add(k);
+                }
+              });
+      additionalObjects.keySet().retainAll(retainKeys);
+    }
+  }
+
+  @Override
+  public <T> T addMetadataIfAbsent(String key, Supplier<T> supplier) {
+    synchronized (userMetaKeys) {
+      userMetaKeys.add(key);
+      return super.addMetadataIfAbsent(key, supplier);
+    }
+  }
+
+  @Override
+  public void removeMetadata(String key) {
+    synchronized (userMetaKeys) {
+      userMetaKeys.add(key);
+      super.removeMetadata(key);
+    }
+  }
+
+  @Override
+  public <T> Optional<T> removeMetadata(String key, Class<T> clazz) {
+    synchronized (userMetaKeys) {
+      userMetaKeys.add(key);
+      return super.removeMetadata(key, clazz);
+    }
   }
 }
