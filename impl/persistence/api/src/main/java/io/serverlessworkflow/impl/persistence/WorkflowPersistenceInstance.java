@@ -48,7 +48,7 @@ public class WorkflowPersistenceInstance extends WorkflowMutableInstance {
               }
             });
     this.startedAt = info.startedAt();
-    setMetadata(info.metadata());
+    additionalObjects = info.metadata();
   }
 
   @Override
@@ -84,7 +84,6 @@ public class WorkflowPersistenceInstance extends WorkflowMutableInstance {
                   : workflow.definition().taskExecutor(completedTaskInfo.nextPosition()),
               completedTaskInfo.isEndNode()));
       workflow.context(completedTaskInfo.context());
-      setMetadata(completedTaskInfo.additionalObjects());
     } else if (taskInfo instanceof RetriedTaskInfo retriedTaskInfo) {
       if (context.retryAttempt() == 0) {
         context.retryAttempt(retriedTaskInfo.retryAttempt());
@@ -100,7 +99,7 @@ public class WorkflowPersistenceInstance extends WorkflowMutableInstance {
         }
         searchContext = tryContext.parent();
       }
-      setMetadata(retriedTaskInfo.metadata());
     }
+    taskInfo.additionalObjects().forEach(additionalObjects::put);
   }
 }

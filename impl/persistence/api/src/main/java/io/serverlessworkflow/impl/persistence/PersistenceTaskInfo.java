@@ -15,4 +15,9 @@
  */
 package io.serverlessworkflow.impl.persistence;
 
-public interface PersistenceTaskInfo {}
+import java.util.Map;
+
+public interface PersistenceTaskInfo {
+
+  Map<String, Object> additionalObjects();
+}

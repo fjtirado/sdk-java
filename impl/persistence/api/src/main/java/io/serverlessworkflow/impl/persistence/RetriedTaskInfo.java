@@ -17,7 +17,7 @@ package io.serverlessworkflow.impl.persistence;
 
 import java.util.Map;
 
-public record RetriedTaskInfo(int retryAttempt, Map<String, Object> metadata)
+public record RetriedTaskInfo(int retryAttempt, Map<String, Object> additionalObjects)
     implements PersistenceTaskInfo {
   public RetriedTaskInfo(int retryAttempt) {
     this(retryAttempt, Map.of());

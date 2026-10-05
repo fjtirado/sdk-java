@@ -53,7 +53,7 @@ public class WorkflowMutableInstance implements WorkflowInstance {
   protected AtomicReference<CompletableFuture<WorkflowModel>> futureRef = new AtomicReference<>();
   protected Instant completedAt;
 
-  private Map<String, Object> additionalObjects = new ConcurrentHashMap<>();
+  protected Map<String, Object> additionalObjects = new ConcurrentHashMap<>();
 
   protected final Map<String, Integer> iterationsMap = new ConcurrentHashMap<>();
 
@@ -446,10 +446,6 @@ public class WorkflowMutableInstance implements WorkflowInstance {
             }
           });
     }
-  }
-
-  protected void setMetadata(Map<String, Object> metadata) {
-    this.additionalObjects = new ConcurrentHashMap<>(metadata);
   }
 
   @Override
