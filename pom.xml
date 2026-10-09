@@ -2,13 +2,13 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>org.openworkflow</groupId>
+    <groupId>org.openworkflow.sdk</groupId>
     <artifactId>openworkflow-parent</artifactId>
     <version>8.0.0-SNAPSHOT</version>
     <packaging>pom</packaging>
 
     <name>Open Workflow :: Parent</name>
-    <url>https://openworkflow.cloud/sdk-java/</url>
+  <url>https://github.com/open-workflow-specification/sdk-java</url>
     <description>Java SDK for Open Workflow Specification</description>
     <inceptionYear>2020</inceptionYear>
     <developers>
@@ -165,22 +165,22 @@
                 <scope>test</scope>
             </dependency>
             <dependency>
-                <groupId>org.openworkflow</groupId>
+                <groupId>org.openworkflow.sdk</groupId>
                 <artifactId>openworkflow-api</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>org.openworkflow</groupId>
+                <groupId>org.openworkflow.sdk</groupId>
                 <artifactId>openworkflow-types</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>org.openworkflow</groupId>
+                <groupId>org.openworkflow.sdk</groupId>
                 <artifactId>openworkflow-serialization</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>org.openworkflow</groupId>
+                <groupId>org.openworkflow.sdk</groupId>
                 <artifactId>openworkflow-annotations</artifactId>
                 <version>${project.version}</version>
             </dependency>

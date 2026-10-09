@@ -1,6 +1,6 @@
 # CNCF Open Workflow SDK Java — Mermaid Exporter
 
-Generate **Mermaid** diagrams for [Open Workflow](https://openworkflow.cloud/) definitions.
+Generate **Mermaid** diagrams for [Open Workflow](https://github.com/open-workflow-specification/sdk-java) definitions.
 This library turns a `Workflow` into a Mermaid **flowchart**, with sensible shapes and wiring for common DSL constructs, and can optionally export **SVG/PNG** via a lightweight HTTP helper.
 
 ---
@@ -32,7 +32,7 @@ Add the dependency to the module where you want to render diagrams.
 
 ```xml
 <dependency>
-  <groupId>org.openworkflow</groupId>
+  <groupId>org.openworkflow.sdk</groupId>
   <artifactId>openworkflow-mermaid</artifactId>
   <version>YOUR_VERSION</version>
 </dependency>
@@ -44,7 +44,7 @@ Add the dependency to the module where you want to render diagrams.
 <summary>Gradle (Kotlin)</summary>
 
 ```kotlin
-implementation("org.openworkflow:openworkflow-mermaid:YOUR_VERSION")
+implementation("org.openworkflow.sdk:openworkflow-mermaid:YOUR_VERSION")
 ```
 
 </details>
@@ -58,8 +58,8 @@ implementation("org.openworkflow:openworkflow-mermaid:YOUR_VERSION")
 ### 1) From a `Workflow` instance
 
 ```java
-import org.openworkflow.api.types.Workflow;
-import org.openworkflow.mermaid.Mermaid;
+import org.openworkflow.sdk.api.types.Workflow;
+import org.openworkflow.sdk.mermaid.Mermaid;
 
 Workflow wf = /* build or load your workflow */;
 String mermaid = new Mermaid().from(wf);
@@ -70,7 +70,7 @@ System.out.println(mermaid);
 ### 2) From a YAML on the classpath
 
 ```java
-import org.openworkflow.mermaid.Mermaid;
+import org.openworkflow.sdk.mermaid.Mermaid;
 
 String mermaid = new Mermaid().from("workflows/sample.yaml");
 ```
@@ -99,8 +99,8 @@ Use the built-in `MermaidInk` helper (HTTP call to mermaid.ink):
 
 ```java
 import java.nio.file.Path;
-import org.openworkflow.mermaid.Mermaid;
-import org.openworkflow.mermaid.MermaidInk;
+import org.openworkflow.sdk.mermaid.Mermaid;
+import org.openworkflow.sdk.mermaid.MermaidInk;
 
 String mermaid = new Mermaid().from("workflows/sample.yaml");
 

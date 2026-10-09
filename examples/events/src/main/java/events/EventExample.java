@@ -17,10 +17,10 @@ package events;
 
 import java.io.IOException;
 import java.util.Map;
-import org.openworkflow.api.WorkflowReader;
-import org.openworkflow.impl.WorkflowApplication;
-import org.openworkflow.impl.WorkflowDefinition;
-import org.openworkflow.impl.WorkflowInstance;
+import org.openworkflow.sdk.api.WorkflowReader;
+import org.openworkflow.sdk.impl.WorkflowApplication;
+import org.openworkflow.sdk.impl.WorkflowDefinition;
+import org.openworkflow.sdk.impl.WorkflowInstance;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

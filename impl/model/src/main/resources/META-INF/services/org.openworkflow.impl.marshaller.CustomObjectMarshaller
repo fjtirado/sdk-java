@@ -1,3 +1,0 @@
-org.openworkflow.impl.model.jackson.JacksonModelMarshaller
-org.openworkflow.impl.model.jackson.JacksonModelCollectionMarshaller
-org.openworkflow.impl.model.jackson.JacksonObjectMarshaller

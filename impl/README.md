@@ -120,19 +120,19 @@ Links below.
 ```xml
 <!-- Core + Jackson (YAML, JQ, JSON Schema, CloudEvents) -->
 <dependency>
-  <groupId>org.openworkflow</groupId>
+  <groupId>org.openworkflow.sdk</groupId>
   <artifactId>openworkflow-impl-jackson</artifactId>
 </dependency>
 
 <!-- Add if you use HTTP Call tasks -->
 <dependency>
-  <groupId>org.openworkflow</groupId>
+  <groupId>org.openworkflow.sdk</groupId>
   <artifactId>openworkflow-impl-http</artifactId>
 </dependency>
 
 <!-- Add if your HTTP calls require OAuth2/OIDC -->
 <dependency>
-  <groupId>org.openworkflow</groupId>
+  <groupId>org.openworkflow.sdk</groupId>
   <artifactId>openworkflow-impl-jackson-jwt</artifactId>
 </dependency>
 ```
@@ -140,9 +140,9 @@ Links below.
 ### Gradle (Kotlin/Groovy)
 
 ```gradle
-implementation("org.openworkflow:openworkflow-impl-jackson")
-implementation("org.openworkflow:openworkflow-impl-http")        // if using HTTP
-implementation("org.openworkflow:openworkflow-impl-jackson-jwt") // if using OAuth2/OIDC
+implementation("org.openworkflow.sdk:openworkflow-impl-jackson")
+implementation("org.openworkflow.sdk:openworkflow-impl-http")        // if using HTTP
+implementation("org.openworkflow.sdk:openworkflow-impl-jackson-jwt") // if using OAuth2/OIDC
 ```
 
 > Requires **Java 17+**.
@@ -186,8 +186,8 @@ Workflow output is {"id":10,"category":{"id":10,"name":"string"},"name":"doggie"
 
 Full examples:
 
-* Blocking: [examples/simpleGet/src/main/java/org/openworkflow/impl/BlockingExample.java]()
-* Non-blocking: [examples/simpleGet/src/main/java/org/openworkflow/impl/NotBlockingExample.java]()
+* Blocking: [examples/simpleGet/src/main/java/org/openworkflow/sdk/impl/BlockingExample.java]()
+* Non-blocking: [examples/simpleGet/src/main/java/org/openworkflow/sdk/impl/NotBlockingExample.java]()
 
 ---
 
@@ -230,7 +230,7 @@ Source: `examples/events/src/main/java/events/EventExample.java`
 
 ## Workflow execution control
 
-As shown in previous examples, to start a new workflow instance, first a [WorkflowInstance](https://github.com/open-workflow-specification/sdk-java/blob/main/impl/core/src/main/java/org/openworkflow/impl/WorkflowInstance.java) is created from a [WorkflowDefinition](https://github.com/open-workflow-specification/sdk-java/blob/main/impl/core/src/main/java/org/openworkflow/impl/WorkflowDefinition.java#L74), specifying the desired input, and then start method is invoked over it. Start method returns a CompletableFuture, which might be used to obtain the output, either synchronously or asynchronously.
+As shown in previous examples, to start a new workflow instance, first a [WorkflowInstance](https://github.com/open-workflow-specification/sdk-java/blob/main/impl/core/src/main/java/org/openworkflow/sdk/impl/WorkflowInstance.java) is created from a [WorkflowDefinition](https://github.com/open-workflow-specification/sdk-java/blob/main/impl/core/src/main/java/org/openworkflow/sdk/impl/WorkflowDefinition.java#L74), specifying the desired input, and then start method is invoked over it. Start method returns a CompletableFuture, which might be used to obtain the output, either synchronously or asynchronously.
 
 Once started, and before it completes, a workflow instance execution can be suspended or cancelled. Once cancelled, a workflow instance is done, while a suspended one might be resumed. 
 
