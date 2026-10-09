@@ -23,6 +23,7 @@ import io.serverlessworkflow.impl.WorkflowContext;
 import io.serverlessworkflow.impl.WorkflowModel;
 import io.serverlessworkflow.impl.WorkflowValueResolver;
 import io.serverlessworkflow.impl.scripts.ScriptUtils;
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -32,6 +33,7 @@ import java.util.concurrent.CompletableFuture;
 public class RunShellExecutor implements CallableTask {
   private final WorkflowValueResolver<String> shellCommand;
   private final List<WorkflowValueResolver<String>> shellArguments;
+  private final Optional<WorkflowValueResolver<String>> shellDirectory;
   private final Optional<WorkflowValueResolver<Map<String, Object>>> shellEnv;
   private final Optional<ProcessReturnType> returnType;
 
@@ -39,11 +41,21 @@ public class RunShellExecutor implements CallableTask {
       WorkflowValueResolver<String> shellCommand,
       List<WorkflowValueResolver<String>> shellArguments,
       Optional<WorkflowValueResolver<Map<String, Object>>> shellEnv,
-      Optional<ProcessReturnType> returnType) {
+      Optional<ProcessReturnType> returnType,
+      Optional<WorkflowValueResolver<String>> shellDirectory) {
     this.shellCommand = shellCommand;
     this.shellArguments = shellArguments;
     this.shellEnv = shellEnv;
     this.returnType = returnType;
+    this.shellDirectory = shellDirectory;
+  }
+
+  public RunShellExecutor(
+      WorkflowValueResolver<String> shellCommand,
+      List<WorkflowValueResolver<String>> shellArguments,
+      Optional<WorkflowValueResolver<Map<String, Object>>> shellEnv,
+      Optional<ProcessReturnType> returnType) {
+    this(shellCommand, shellArguments, shellEnv, returnType, Optional.empty());
   }
 
   @Override
@@ -64,6 +76,9 @@ public class RunShellExecutor implements CallableTask {
     shellArguments.forEach(f -> commandAndArgs.add(f.apply(workflowContext, taskContext, model)));
 
     ProcessBuilder builder = new ProcessBuilder(commandAndArgs);
+    shellDirectory.ifPresent(
+        directory ->
+            builder.directory(new File(directory.apply(workflowContext, taskContext, model))));
     shellEnv.ifPresent(
         map -> ScriptUtils.addEnviromment(builder, map.apply(workflowContext, taskContext, model)));
 
