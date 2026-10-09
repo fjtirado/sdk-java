@@ -42,12 +42,22 @@ public class RunShellExecutor implements CallableTask {
       List<WorkflowValueResolver<String>> shellArguments,
       Optional<WorkflowValueResolver<String>> shellDirectory,
       Optional<WorkflowValueResolver<Map<String, Object>>> shellEnv,
-      Optional<ProcessReturnType> returnType) {
+      Optional<ProcessReturnType> returnType,
+      Optional<WorkflowValueResolver<String>> shellDirectory) {
     this.shellCommand = shellCommand;
     this.shellArguments = shellArguments;
     this.shellDirectory = shellDirectory;
     this.shellEnv = shellEnv;
     this.returnType = returnType;
+    this.shellDirectory = shellDirectory;
+  }
+
+  public RunShellExecutor(
+      WorkflowValueResolver<String> shellCommand,
+      List<WorkflowValueResolver<String>> shellArguments,
+      Optional<WorkflowValueResolver<Map<String, Object>>> shellEnv,
+      Optional<ProcessReturnType> returnType) {
+    this(shellCommand, shellArguments, shellEnv, returnType, Optional.empty());
   }
 
   public RunShellExecutor(

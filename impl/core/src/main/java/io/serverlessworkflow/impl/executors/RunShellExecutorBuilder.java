@@ -48,8 +48,10 @@ public class RunShellExecutorBuilder implements RunnableTaskBuilder<RunShell> {
                 WorkflowUtils.buildMapResolver(
                     definition.application(), shell.getEnvironment().getAdditionalProperties()))
             : Optional.empty(),
-        taskConfiguration.isAwait()
-            ? Optional.of(taskConfiguration.getReturn())
+        taskConfiguration.isAwait() ? Optional.of(taskConfiguration.getReturn()) : Optional.empty(),
+        shell.getDirectory() != null
+            ? Optional.of(
+                WorkflowUtils.buildStringFilter(definition.application(), shell.getDirectory()))
             : Optional.empty());
   }
 
