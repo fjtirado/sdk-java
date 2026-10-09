@@ -1,6 +1,6 @@
 [
   {
-    "name": "io.serverlessworkflow.impl.executors.ProcessResult",
+    "name": "org.openworkflow.impl.executors.ProcessResult",
     "queryAllPublicConstructors": true,
     "queryAllDeclaredConstructors": true,
     "queryAllPublicMethods": true,
@@ -15,7 +15,7 @@
     "allDeclaredClasses": true
   },
   {
-    "name": "io.serverlessworkflow.impl.WorkflowError",
+    "name": "org.openworkflow.impl.WorkflowError",
     "queryAllPublicConstructors": true,
     "queryAllDeclaredConstructors": true,
     "queryAllPublicMethods": true,
@@ -30,7 +30,7 @@
     "allDeclaredClasses": true
   },
   {
-    "name": "io.serverlessworkflow.impl.lifecycle.ce.TaskCEData",
+    "name": "org.openworkflow.impl.lifecycle.ce.TaskCEData",
     "queryAllPublicConstructors": true,
     "queryAllDeclaredConstructors": true,
     "queryAllPublicMethods": true,
@@ -45,7 +45,7 @@
     "allDeclaredClasses": true
   },
   {
-    "name": "io.serverlessworkflow.impl.lifecycle.ce.TaskCancelledCEData",
+    "name": "org.openworkflow.impl.lifecycle.ce.TaskCancelledCEData",
     "queryAllPublicConstructors": true,
     "queryAllDeclaredConstructors": true,
     "queryAllPublicMethods": true,
@@ -60,7 +60,7 @@
     "allDeclaredClasses": true
   },
   {
-    "name": "io.serverlessworkflow.impl.lifecycle.ce.TaskCompletedCEData",
+    "name": "org.openworkflow.impl.lifecycle.ce.TaskCompletedCEData",
     "queryAllPublicConstructors": true,
     "queryAllDeclaredConstructors": true,
     "queryAllPublicMethods": true,
@@ -75,7 +75,7 @@
     "allDeclaredClasses": true
   },
   {
-    "name": "io.serverlessworkflow.impl.lifecycle.ce.TaskCompletedCEDataWithOutput",
+    "name": "org.openworkflow.impl.lifecycle.ce.TaskCompletedCEDataWithOutput",
     "queryAllPublicConstructors": true,
     "queryAllDeclaredConstructors": true,
     "queryAllPublicMethods": true,
@@ -90,7 +90,7 @@
     "allDeclaredClasses": true
   },
   {
-    "name": "io.serverlessworkflow.impl.lifecycle.ce.TaskFailedCEData",
+    "name": "org.openworkflow.impl.lifecycle.ce.TaskFailedCEData",
     "queryAllPublicConstructors": true,
     "queryAllDeclaredConstructors": true,
     "queryAllPublicMethods": true,
@@ -105,7 +105,7 @@
     "allDeclaredClasses": true
   },
   {
-    "name": "io.serverlessworkflow.impl.lifecycle.ce.TaskResumedCEData",
+    "name": "org.openworkflow.impl.lifecycle.ce.TaskResumedCEData",
     "queryAllPublicConstructors": true,
     "queryAllDeclaredConstructors": true,
     "queryAllPublicMethods": true,
@@ -120,7 +120,7 @@
     "allDeclaredClasses": true
   },
   {
-    "name": "io.serverlessworkflow.impl.lifecycle.ce.TaskRetriedCEData",
+    "name": "org.openworkflow.impl.lifecycle.ce.TaskRetriedCEData",
     "queryAllPublicConstructors": true,
     "queryAllDeclaredConstructors": true,
     "queryAllPublicMethods": true,
@@ -135,7 +135,7 @@
     "allDeclaredClasses": true
   },
   {
-    "name": "io.serverlessworkflow.impl.lifecycle.ce.TaskStartedCEData",
+    "name": "org.openworkflow.impl.lifecycle.ce.TaskStartedCEData",
     "queryAllPublicConstructors": true,
     "queryAllDeclaredConstructors": true,
     "queryAllPublicMethods": true,
@@ -150,7 +150,7 @@
     "allDeclaredClasses": true
   },
   {
-    "name": "io.serverlessworkflow.impl.lifecycle.ce.TaskStartedCEDataWithInput",
+    "name": "org.openworkflow.impl.lifecycle.ce.TaskStartedCEDataWithInput",
     "queryAllPublicConstructors": true,
     "queryAllDeclaredConstructors": true,
     "queryAllPublicMethods": true,
@@ -165,7 +165,7 @@
     "allDeclaredClasses": true
   },
   {
-    "name": "io.serverlessworkflow.impl.lifecycle.ce.TaskSuspendedCEData",
+    "name": "org.openworkflow.impl.lifecycle.ce.TaskSuspendedCEData",
     "queryAllPublicConstructors": true,
     "queryAllDeclaredConstructors": true,
     "queryAllPublicMethods": true,
@@ -180,7 +180,7 @@
     "allDeclaredClasses": true
   },
   {
-    "name": "io.serverlessworkflow.impl.lifecycle.ce.WorkflowCEData",
+    "name": "org.openworkflow.impl.lifecycle.ce.WorkflowCEData",
     "queryAllPublicConstructors": true,
     "queryAllDeclaredConstructors": true,
     "queryAllPublicMethods": true,
@@ -195,7 +195,7 @@
     "allDeclaredClasses": true
   },
   {
-    "name": "io.serverlessworkflow.impl.lifecycle.ce.WorkflowCancelledCEData",
+    "name": "org.openworkflow.impl.lifecycle.ce.WorkflowCancelledCEData",
     "queryAllPublicConstructors": true,
     "queryAllDeclaredConstructors": true,
     "queryAllPublicMethods": true,
@@ -210,7 +210,7 @@
     "allDeclaredClasses": true
   },
   {
-    "name": "io.serverlessworkflow.impl.lifecycle.ce.WorkflowCompletedCEData",
+    "name": "org.openworkflow.impl.lifecycle.ce.WorkflowCompletedCEData",
     "queryAllPublicConstructors": true,
     "queryAllDeclaredConstructors": true,
     "queryAllPublicMethods": true,
@@ -225,7 +225,7 @@
     "allDeclaredClasses": true
   },
   {
-    "name": "io.serverlessworkflow.impl.lifecycle.ce.WorkflowCompletedCEDataWithOutput",
+    "name": "org.openworkflow.impl.lifecycle.ce.WorkflowCompletedCEDataWithOutput",
     "queryAllPublicConstructors": true,
     "queryAllDeclaredConstructors": true,
     "queryAllPublicMethods": true,
@@ -240,7 +240,7 @@
     "allDeclaredClasses": true
   },
   {
-    "name": "io.serverlessworkflow.impl.lifecycle.ce.WorkflowDefinitionCEData",
+    "name": "org.openworkflow.impl.lifecycle.ce.WorkflowDefinitionCEData",
     "queryAllPublicConstructors": true,
     "queryAllDeclaredConstructors": true,
     "queryAllPublicMethods": true,
@@ -255,7 +255,7 @@
     "allDeclaredClasses": true
   },
   {
-    "name": "io.serverlessworkflow.impl.lifecycle.ce.WorkflowFailedCEData",
+    "name": "org.openworkflow.impl.lifecycle.ce.WorkflowFailedCEData",
     "queryAllPublicConstructors": true,
     "queryAllDeclaredConstructors": true,
     "queryAllPublicMethods": true,
@@ -270,7 +270,7 @@
     "allDeclaredClasses": true
   },
   {
-    "name": "io.serverlessworkflow.impl.lifecycle.ce.WorkflowResumedCEData",
+    "name": "org.openworkflow.impl.lifecycle.ce.WorkflowResumedCEData",
     "queryAllPublicConstructors": true,
     "queryAllDeclaredConstructors": true,
     "queryAllPublicMethods": true,
@@ -285,7 +285,7 @@
     "allDeclaredClasses": true
   },
   {
-    "name": "io.serverlessworkflow.impl.lifecycle.ce.WorkflowStartedCEData",
+    "name": "org.openworkflow.impl.lifecycle.ce.WorkflowStartedCEData",
     "queryAllPublicConstructors": true,
     "queryAllDeclaredConstructors": true,
     "queryAllPublicMethods": true,
@@ -300,7 +300,7 @@
     "allDeclaredClasses": true
   },
   {
-    "name": "io.serverlessworkflow.impl.lifecycle.ce.WorkflowStartedCEDataWithInput",
+    "name": "org.openworkflow.impl.lifecycle.ce.WorkflowStartedCEDataWithInput",
     "queryAllPublicConstructors": true,
     "queryAllDeclaredConstructors": true,
     "queryAllPublicMethods": true,
@@ -315,7 +315,7 @@
     "allDeclaredClasses": true
   },
   {
-    "name": "io.serverlessworkflow.impl.lifecycle.ce.WorkflowStatusCEDataEvent",
+    "name": "org.openworkflow.impl.lifecycle.ce.WorkflowStatusCEDataEvent",
     "queryAllPublicConstructors": true,
     "queryAllDeclaredConstructors": true,
     "queryAllPublicMethods": true,
@@ -330,7 +330,7 @@
     "allDeclaredClasses": true
   },
   {
-    "name": "io.serverlessworkflow.impl.lifecycle.ce.WorkflowSuspendedCEData",
+    "name": "org.openworkflow.impl.lifecycle.ce.WorkflowSuspendedCEData",
     "queryAllPublicConstructors": true,
     "queryAllDeclaredConstructors": true,
     "queryAllPublicMethods": true,

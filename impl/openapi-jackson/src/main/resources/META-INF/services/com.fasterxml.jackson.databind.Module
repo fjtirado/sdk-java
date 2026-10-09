@@ -1,1 +1,1 @@
-io.serverlessworkflow.impl.executors.openapi.jackson.JacksonUnifiedOpenAPIMixInModule
+org.openworkflow.impl.executors.openapi.jackson.JacksonUnifiedOpenAPIMixInModule

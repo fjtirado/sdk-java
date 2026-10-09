@@ -1,6 +1,6 @@
 [
   {
-    "name": "io.serverlessworkflow.impl.model.jackson.JacksonModelSerializer",
+    "name": "org.openworkflow.impl.model.jackson.JacksonModelSerializer",
     "queryAllPublicConstructors": true,
     "queryAllDeclaredConstructors": true,
     "queryAllPublicMethods": true,
@@ -15,7 +15,7 @@
     "allDeclaredClasses": true
   },
   {
-    "name": "io.serverlessworkflow.impl.model.jackson.JacksonModelDeserializer",
+    "name": "org.openworkflow.impl.model.jackson.JacksonModelDeserializer",
     "queryAllPublicConstructors": true,
     "queryAllDeclaredConstructors": true,
     "queryAllPublicMethods": true,
@@ -30,7 +30,7 @@
     "allDeclaredClasses": true
   },
   {
-    "name": "io.serverlessworkflow.impl.model.jackson.JacksonModelCollectionSerializer",
+    "name": "org.openworkflow.impl.model.jackson.JacksonModelCollectionSerializer",
     "queryAllPublicConstructors": true,
     "queryAllDeclaredConstructors": true,
     "queryAllPublicMethods": true,
@@ -45,7 +45,7 @@
     "allDeclaredClasses": true
   },
   {
-    "name": "io.serverlessworkflow.impl.model.jackson.JacksonModelCollectionDeserializer",
+    "name": "org.openworkflow.impl.model.jackson.JacksonModelCollectionDeserializer",
     "queryAllPublicConstructors": true,
     "queryAllDeclaredConstructors": true,
     "queryAllPublicMethods": true,
