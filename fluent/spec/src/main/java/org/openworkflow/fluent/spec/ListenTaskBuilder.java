@@ -16,8 +16,8 @@
 package org.openworkflow.fluent.spec;
 
 /**
- * Fluent builder for a "listen" task in a Serverless Workflow. Enforces exactly one consumption
- * strategy: one, all, or any.
+ * Fluent builder for a "listen" task in a Open Workflow. Enforces exactly one consumption strategy:
+ * one, all, or any.
  */
 public class ListenTaskBuilder
     extends AbstractListenTaskBuilder<TaskItemListBuilder, ListenToBuilder> {

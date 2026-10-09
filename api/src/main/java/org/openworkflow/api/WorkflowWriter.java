@@ -24,7 +24,7 @@ import java.nio.file.Path;
 import org.openworkflow.api.types.Workflow;
 
 /**
- * Utility class for writing Serverless Workflow definitions to various outputs and formats.
+ * Utility class for writing Open Workflow definitions to various outputs and formats.
  *
  * <p>This class provides static methods to serialize {@link Workflow} objects to files, streams,
  * writers, byte arrays, or strings in either JSON or YAML format. The format is determined by the

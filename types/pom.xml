@@ -52,7 +52,7 @@
             <dependencies>
                 <dependency>
                     <groupId>org.openworkflow</groupId>
-                    <artifactId>serverless-workflow-types-generator</artifactId>
+                    <artifactId>openworkflow-types-generator</artifactId>
                     <version>${project.version}</version>
                 </dependency>
             </dependencies>

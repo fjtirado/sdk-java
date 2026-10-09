@@ -8,7 +8,7 @@
 
 | Module         | Purpose                                                                                       |
 | -------------- | --------------------------------------------------------------------------------------------- |
-| **spec**       | Core DSL implementing the [Open Workflow Specification](https://github.com/serverlessworkflow/specification). Purely compliant fluent API. |
+| **spec**       | Core DSL implementing the [Open Workflow Specification](https://github.com/open-workflow-specification/specification). Purely compliant fluent API. |
 | **func**       | Java‑centric “functional” DSL on top of **spec**: adds `Function<>`/`Predicate<>` support, `callFn` for Java method calls, and richer flow controls.    |
 | **agentic**    | **Experimental** proof‑of‑concept DSL built on **func** for LangChain4j agentic workflows: `agent`, `sequence`, `loop`, `parallel`, etc.     |
 
@@ -21,7 +21,7 @@ Add the modules you need to your Maven `pom.xml` (replace versions as appropriat
 ```xml
 <!-- 
     Replace ${version.org.openworkflow} with the actual released version:
-    https://github.com/serverlessworkflow/sdk-java/releases 
+    https://github.com/open-workflow-specification/sdk-java/releases 
 -->
 <dependency>
   <groupId>org.openworkflow</groupId>

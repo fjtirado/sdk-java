@@ -19,7 +19,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import java.nio.file.Path;
 
 /**
- * Enum representing the supported formats for Serverless Workflow definitions.
+ * Enum representing the supported formats for Open Workflow definitions.
  *
  * <p>Provides utility methods to determine the format based on file name or path, and to access the
  * corresponding {@link ObjectMapper} for serialization and deserialization.

@@ -91,7 +91,7 @@ public class RunScriptJavaScriptTest {
             softly.assertThat(model.asText()).isPresent();
             softly
                 .assertThat(model.asText().get())
-                .isEqualTo("Running JavaScript code using Serverless Workflow!");
+                .isEqualTo("Running JavaScript code using Open Workflow!");
           });
     }
   }

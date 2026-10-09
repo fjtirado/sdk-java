@@ -174,6 +174,6 @@ class OpenAPIExecutor implements CallableTask {
         .orElseThrow(
             () ->
                 new IllegalStateException(
-                    "Missing UnifiedOpenAPIReader, please make sure dependency serverlessworkflow-impl-openapi is included"));
+                    "Missing UnifiedOpenAPIReader, please make sure dependency openworkflow-impl-openapi is included"));
   }
 }

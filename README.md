@@ -121,7 +121,7 @@ try (InputStream in = new FileInputStream("simple.yaml")) {
 }
 ```
 
-For additional reading helper methods, including the one to read a workflow definition from classpath, check [WorkflowReader](api/src/main/java/io/serverlessworkflow/api/WorkflowReader.java) class. 
+For additional reading helper methods, including the one to read a workflow definition from classpath, check [WorkflowReader](api/src/main/java/org/openworkflow/api/WorkflowReader.java) class. 
 
 ### Writing workflow definition to a JSON/YAML target
 
@@ -134,7 +134,7 @@ try (OutputStream out = new FileOutputStream("simple.json")) {
 }
 
 ```
-For additional writing helper methods, check [WorkflowWriter](api/src/main/java/io/serverlessworkflow/api/WorkflowWriter.java) class. 
+For additional writing helper methods, check [WorkflowWriter](api/src/main/java/org/openworkflow/api/WorkflowWriter.java) class. 
 
 ### Reference implementation
 

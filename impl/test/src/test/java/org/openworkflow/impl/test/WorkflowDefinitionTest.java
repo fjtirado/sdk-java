@@ -206,7 +206,7 @@ public class WorkflowDefinitionTest {
 
   private static void checkWorkflowException(WorkflowException ex) {
     assertThat(ex.getWorkflowError().type())
-        .isEqualTo("https://serverlessworkflow.io/errors/not-implemented");
+        .isEqualTo("https://openworkflow.cloud/errors/not-implemented");
     assertThat(ex.getWorkflowError().status()).isEqualTo(500);
     assertThat(ex.getWorkflowError().title()).isEqualTo("Not Implemented");
     assertThat(ex.getWorkflowError().detail()).contains("raise-not-implemented");

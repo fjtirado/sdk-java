@@ -223,7 +223,7 @@ class LifeCycleEventsTest {
         .isNotNull();
     WorkflowError error =
         assertPojoInCE("org.openworkflow.workflow.faulted.v1", WorkflowFailedCEData.class).error();
-    assertThat(error.type()).isEqualTo("https://serverlessworkflow.io/errors/not-implemented");
+    assertThat(error.type()).isEqualTo("https://openworkflow.cloud/errors/not-implemented");
     assertThat(error.title()).isEqualTo("Not Implemented");
     assertThat(error.status()).isEqualTo(500);
     assertThat(error.detail()).contains("raise-not-implemented");

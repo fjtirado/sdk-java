@@ -32,7 +32,7 @@ public record WorkflowError(String type, int status, String instance, String tit
   }
 
   public static Builder expression() {
-    return error("https://serverlessworkflow.io/spec/1.0.0/errors/expression", 400);
+    return error(Errors.EXPRESSION.toString(), Errors.EXPRESSION.status());
   }
 
   public static Builder communication(int status, TaskContext context, Throwable ex) {

@@ -463,7 +463,7 @@ public class HTTPWorkflowDefinitionTest {
   @Test
   @Disabled(
       value =
-          "See the following discussion: https://github.com/serverlessworkflow/sdk-java/pull/1013/files#r2562919102 and https://github.com/serverlessworkflow/sdk-java/issues/1024")
+          "See the following discussion: https://github.com/open-workflow-specification/sdk-java/pull/1013/files#r2562919102 and https://github.com/open-workflow-specification/sdk-java/issues/1024")
   void testPatchCall() throws IOException, InterruptedException {
     mockServer.enqueue(new MockResponse(204, Headers.of(), ""));
     appl.workflowDefinition(readWorkflowFromClasspath("workflows-samples/call-http-patch.yaml"))
@@ -481,7 +481,7 @@ public class HTTPWorkflowDefinitionTest {
 
   @Test
   @Disabled(
-      "See the following discussion: https://github.com/serverlessworkflow/sdk-java/pull/1013/files#r2566152233 and https://github.com/serverlessworkflow/sdk-java/issues/1024#issue-3680971320")
+      "See the following discussion: https://github.com/open-workflow-specification/sdk-java/pull/1013/files#r2566152233 and https://github.com/open-workflow-specification/sdk-java/issues/1024#issue-3680971320")
   void testRedirect_should_throws_when_redirect_is_false_and_response_status_is_not_2xx() {
     mockServer.enqueue(
         new MockResponse(301, Headers.of("Location", "http://localhost:9876/redirected"), ""));

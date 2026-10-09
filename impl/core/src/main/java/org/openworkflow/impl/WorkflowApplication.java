@@ -512,7 +512,7 @@ public class WorkflowApplication implements AutoCloseable {
                                   @Override
                                   public Optional<Duration> nextExecution() {
                                     throw new UnsupportedOperationException(
-                                        "Missing CronResolverFactory, please add serverlessworkflow-impl-cron dependency to your classpath");
+                                        "Missing CronResolverFactory, please add openworkflow-impl-cron dependency to your classpath");
                                   }
                                 };
 
@@ -552,7 +552,7 @@ public class WorkflowApplication implements AutoCloseable {
       }
 
       if (defaultCatalogURI == null) {
-        defaultCatalogURI = URI.create("https://github.com/serverlessworkflow/catalog");
+        defaultCatalogURI = URI.create("https://github.com/open-workflow-specification/catalog");
       }
       if (defaultEventSource == null) {
         defaultEventSource = new EmitSourceResolver();

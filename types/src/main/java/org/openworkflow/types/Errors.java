@@ -24,7 +24,7 @@ import java.util.function.Supplier;
  * Standard error types with a configurable spec version.
  *
  * @see <a
- *     href="https://github.com/serverlessworkflow/specification/blob/main/dsl-reference.md#standard-error-types">DSL
+ *     href="https://github.com/open-workflow-specification/specification/blob/main/dsl-reference.md#standard-error-types">DSL
  *     Reference - Standard Error Types</a>
  */
 public final class Errors {
@@ -35,7 +35,7 @@ public final class Errors {
       new AtomicReference<>(() -> "1.0.0");
 
   private static final AtomicReference<String> BASE_PATTERN =
-      new AtomicReference<>("https://serverlessworkflow.io/spec/%s/errors/");
+      new AtomicReference<>("https://openworkflow.cloud/spec/%s/errors/");
 
   public static void setSpecVersion(String version) {
     Objects.requireNonNull(version, "version");
@@ -90,6 +90,7 @@ public final class Errors {
   public static final Standard AUTHENTICATION = new Standard("authentication", 401);
   public static final Standard AUTHORIZATION = new Standard("authorization", 403);
   public static final Standard DATA = new Standard("data", 422);
+  public static final Standard EXPRESSION = new Standard("expression", 400);
   public static final Standard TIMEOUT = new Standard("timeout", 408);
   public static final Standard NOT_IMPLEMENTED = new Standard("not-implemented", 501);
   public static final Standard VALIDATION = new Standard("validation", 400);

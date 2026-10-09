@@ -1,6 +1,6 @@
 # CNCF Open Workflow SDK Java — Mermaid Exporter
 
-Generate **Mermaid** diagrams for [Open Workflow](https://serverlessworkflow.io/) definitions.
+Generate **Mermaid** diagrams for [Open Workflow](https://openworkflow.cloud/) definitions.
 This library turns a `Workflow` into a Mermaid **flowchart**, with sensible shapes and wiring for common DSL constructs, and can optionally export **SVG/PNG** via a lightweight HTTP helper.
 
 ---

@@ -410,7 +410,7 @@ class CoreTaskTypesTest {
     assertThat(ex.getCause()).isInstanceOf(WorkflowException.class);
     WorkflowException wex = (WorkflowException) ex.getCause();
     assertThat(wex.getWorkflowError().type())
-        .isEqualTo("https://serverlessworkflow.io/errors/not-implemented");
+        .isEqualTo("https://openworkflow.cloud/errors/not-implemented");
     assertThat(wex.getWorkflowError().status()).isEqualTo(500);
     assertThat(wex.getWorkflowError().title()).isEqualTo("Not Implemented");
   }
@@ -427,7 +427,7 @@ class CoreTaskTypesTest {
             doTasks(
                 raise(
                     "notImplemented",
-                    error(URI.create("https://serverlessworkflow.io/errors/not-implemented"), 500)
+                    error(URI.create("https://openworkflow.cloud/errors/not-implemented"), 500)
                         .title("Not Implemented")
                         .detail(
                             "${ \"The workflow '\\( $workflow.definition.document.name ):\\( $workflow.definition.document.version )' is a work in progress and cannot be run yet\" }"))))
@@ -447,7 +447,7 @@ class CoreTaskTypesTest {
     assertThat(ex.getCause()).isInstanceOf(WorkflowException.class);
     WorkflowException wex = (WorkflowException) ex.getCause();
     assertThat(wex.getWorkflowError().type())
-        .isEqualTo("https://serverlessworkflow.io/errors/not-implemented");
+        .isEqualTo("https://openworkflow.cloud/errors/not-implemented");
     assertThat(wex.getWorkflowError().status()).isEqualTo(500);
     assertThat(wex.getWorkflowError().title()).isEqualTo("Not Implemented");
   }
@@ -468,7 +468,7 @@ class CoreTaskTypesTest {
                         e.error(
                             "notImplemented",
                             err ->
-                                err.type("https://serverlessworkflow.io/errors/not-implemented")
+                                err.type("https://openworkflow.cloud/errors/not-implemented")
                                     .status(500)
                                     .title("Not Implemented")
                                     .detail(

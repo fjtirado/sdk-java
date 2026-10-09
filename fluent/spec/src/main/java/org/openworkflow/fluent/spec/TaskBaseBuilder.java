@@ -65,7 +65,7 @@ public abstract class TaskBaseBuilder<T extends TaskBaseBuilder<T>>
    *
    * @param expression jq expression to evaluate
    * @see <a
-   *     href="https://github.com/serverlessworkflow/specification/blob/main/dsl-reference.md#task">DSL
+   *     href="https://github.com/open-workflow-specification/specification/blob/main/dsl-reference.md#task">DSL
    *     Reference - Task</a>
    */
   public T when(String expression) {
@@ -131,7 +131,7 @@ public abstract class TaskBaseBuilder<T extends TaskBaseBuilder<T>>
    *
    * @param metadataConsumer consumer used to populate the task metadata
    * @see <a
-   *     href="https://github.com/serverlessworkflow/specification/blob/main/dsl-reference.md#task">DSL
+   *     href="https://github.com/open-workflow-specification/specification/blob/main/dsl-reference.md#task">DSL
    *     Reference - Task</a>
    */
   public T metadata(Consumer<TaskMetadataBuilder> metadataConsumer) {

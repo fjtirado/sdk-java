@@ -1,8 +1,8 @@
-[![Gitpod ready-to-code](https://img.shields.io/badge/Gitpod-ready--to--code-blue?logo=gitpod)](https://gitpod.io/#https://github.com/serverlessworkflow/sdk-java)
+[![Gitpod ready-to-code](https://img.shields.io/badge/Gitpod-ready--to--code-blue?logo=gitpod)](https://gitpod.io/#https://github.com/open-workflow-specification/sdk-java)
 
 # Open Workflow Specification — Java SDK (Reference Implementation)
 
-A lightweight, non-blocking, reactive **runtime** for the [Open Workflow](https://serverlessworkflow.io/) specification. Use it to load, validate, and execute workflows written in YAML/JSON—or build them programmatically with our Fluent DSL.
+A lightweight, non-blocking, reactive **runtime** for the [Open Workflow](https://openworkflow.io/) specification. Use it to load, validate, and execute workflows written in YAML/JSON—or build them programmatically with our Fluent DSL.
 
 ---
 
@@ -186,8 +186,8 @@ Workflow output is {"id":10,"category":{"id":10,"name":"string"},"name":"doggie"
 
 Full examples:
 
-* Blocking: [examples/simpleGet/src/main/java/io/serverlessworkflow/impl/BlockingExample.java]()
-* Non-blocking: [examples/simpleGet/src/main/java/io/serverlessworkflow/impl/NotBlockingExample.java]()
+* Blocking: [examples/simpleGet/src/main/java/org/openworkflow/impl/BlockingExample.java]()
+* Non-blocking: [examples/simpleGet/src/main/java/org/openworkflow/impl/NotBlockingExample.java]()
 
 ---
 
@@ -230,7 +230,7 @@ Source: `examples/events/src/main/java/events/EventExample.java`
 
 ## Workflow execution control
 
-As shown in previous examples, to start a new workflow instance, first a [WorkflowInstance](https://github.com/serverlessworkflow/sdk-java/blob/main/impl/core/src/main/java/io/serverlessworkflow/impl/WorkflowInstance.java) is created from a [WorkflowDefinition](https://github.com/serverlessworkflow/sdk-java/blob/main/impl/core/src/main/java/io/serverlessworkflow/impl/WorkflowDefinition.java#L74), specifying the desired input, and then start method is invoked over it. Start method returns a CompletableFuture, which might be used to obtain the output, either synchronously or asynchronously. 
+As shown in previous examples, to start a new workflow instance, first a [WorkflowInstance](https://github.com/open-workflow-specification/sdk-java/blob/main/impl/core/src/main/java/org/openworkflow/impl/WorkflowInstance.java) is created from a [WorkflowDefinition](https://github.com/open-workflow-specification/sdk-java/blob/main/impl/core/src/main/java/org/openworkflow/impl/WorkflowDefinition.java#L74), specifying the desired input, and then start method is invoked over it. Start method returns a CompletableFuture, which might be used to obtain the output, either synchronously or asynchronously.
 
 Once started, and before it completes, a workflow instance execution can be suspended or cancelled. Once cancelled, a workflow instance is done, while a suspended one might be resumed. 
 
@@ -241,7 +241,7 @@ Workflow progress might be recorded into DB. See [details](persistence/README.md
 ## Fluent Java DSL
 
 Prefer building workflows programmatically with type-safe builders and recipes?
-👉 **Docs:** [https://github.com/serverlessworkflow/sdk-java/blob/main/fluent/README.md](https://github.com/serverlessworkflow/sdk-java/blob/main/fluent/README.md)
+👉 **Docs:** [https://github.com/open-workflow-specification/sdk-java/blob/main/fluent/README.md](https://github.com/open-workflow-specification/sdk-java/blob/main/fluent/README.md)
 
 Highlights:
 
@@ -254,7 +254,7 @@ Highlights:
 ## Mermaid Diagrams
 
 Generate Mermaid diagrams for your workflows right from the SDK.
-👉 **Docs:** [https://github.com/serverlessworkflow/sdk-java/blob/main/mermaid/README.md](https://github.com/serverlessworkflow/sdk-java/blob/main/mermaid/README.md)
+👉 **Docs:** [https://github.com/open-workflow-specification/sdk-java/blob/main/mermaid/README.md](https://github.com/open-workflow-specification/sdk-java/blob/main/mermaid/README.md)
 
 Great for docs, PRs, and visual reviews.
 

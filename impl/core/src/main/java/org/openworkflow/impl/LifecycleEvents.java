@@ -17,7 +17,7 @@ package org.openworkflow.impl;
 
 /**
  * @see <a
- *     href="https://github.com/serverlessworkflow/specification/blob/main/dsl.md#lifecycle-events">Serverless
+ *     href="https://github.com/open-workflow-specification/specification/blob/main/dsl.md#lifecycle-events">Open
  *     Workflow Specification :: DSL :: LifecycleEvents</a>
  */
 public final class LifecycleEvents {

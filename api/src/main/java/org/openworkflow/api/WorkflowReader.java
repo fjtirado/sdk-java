@@ -23,7 +23,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import org.openworkflow.api.types.Workflow;
 
-/** Utility class for reading and parsing Serverless Workflow definitions from various sources. */
+/** Utility class for reading and parsing Open Workflow definitions from various sources. */
 public class WorkflowReader {
 
   /**

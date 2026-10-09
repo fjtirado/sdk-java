@@ -526,8 +526,8 @@ public final class DSL {
    *
    * <p>This overload exposes the complete {@link OAuth2AuthenticationPolicyBuilder} so that every
    * field of the <a
-   * href="https://github.com/serverlessworkflow/specification/blob/main/dsl-reference.md#oauth2-authentication">OAuth2
-   * authentication</a> section of the Serverless Workflow DSL can be configured: {@code authority},
+   * href="https://github.com/open-workflow-specification/specification/blob/main/dsl-reference.md#oauth2-authentication">OAuth2
+   * authentication</a> section of the Open Workflow DSL can be configured: {@code authority},
    * {@code grant}, {@code client}, {@code request} encoding, {@code issuers}, {@code scopes},
    * {@code audiences}, {@code username}, {@code password}, {@code subject}, {@code actor} and
    * {@code endpoints} (token, revocation, introspection).

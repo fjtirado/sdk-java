@@ -82,7 +82,7 @@
     <plugins>
         <plugin>
             <groupId>org.openworkflow</groupId>
-            <artifactId>serverless-workflow-jackson-generator</artifactId>
+            <artifactId>openworkflow-jackson-generator</artifactId>
             <version>${project.version}</version>
             <dependencies />
             <configuration>

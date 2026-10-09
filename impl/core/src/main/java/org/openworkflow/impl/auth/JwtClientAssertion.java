@@ -34,7 +34,7 @@ import org.openworkflow.impl.WorkflowUtils;
 /**
  * Handles the {@code client_secret_jwt} and {@code private_key_jwt} client authentication methods.
  *
- * <p>Per the Serverless Workflow specification, the caller supplies a pre-signed JWT through {@code
+ * <p>Per the Open Workflow specification, the caller supplies a pre-signed JWT through {@code
  * client.assertion}. Both methods are forwarded identically: the assertion is sent as {@code
  * client_assertion} together with the standard {@code client_assertion_type} defined by RFC 7523.
  * The signing algorithm (HMAC for {@code client_secret_jwt}, an asymmetric key for {@code

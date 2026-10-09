@@ -34,7 +34,7 @@ import org.openworkflow.fluent.spec.WorkflowTaskBuilder;
  * Documents the exposed fluent `do` DSL.
  *
  * @see <a
- *     href="https://github.com/serverlessworkflow/specification/blob/main/dsl-reference.md#do">CNCF
+ *     href="https://github.com/open-workflow-specification/specification/blob/main/dsl-reference.md#do">CNCF
  *     DSL Reference - Do</a>
  */
 public interface DoFluent<T>

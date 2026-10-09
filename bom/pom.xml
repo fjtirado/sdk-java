@@ -10,7 +10,7 @@
     <artifactId>openworkflow-bom</artifactId>
     <packaging>pom</packaging>
     <name>Open Workflow :: BOM</name>
-    <description>Bill of Materials for Serverless Workflow Java SDK</description>
+    <description>Bill of Materials for Open Workflow Java SDK</description>
 
     <build>
         <plugins>

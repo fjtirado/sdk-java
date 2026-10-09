@@ -34,7 +34,7 @@ class MermaidSmokeTest {
       throw new IllegalStateException(
           """
                           No YAML resources found on the test classpath.
-                          - Is serverlessworkflow-impl-test built and its *-tests.jar on the test classpath?
+                          - Is openworkflow-impl-test built and its *-tests.jar on the test classpath?
                           - Are YAMLs under src/test/resources in that module?
                           - Path inside JAR may differ from '/'.
                           """);

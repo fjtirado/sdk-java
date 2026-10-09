@@ -298,7 +298,7 @@ public class DSLTest {
         wf.getDo().get(0).getTask().getRaiseTask().getRaise().getError().getRaiseErrorDefinition();
 
     assertThat(def.getType().getLiteralErrorType().getLiteralUri().toString())
-        .isEqualTo("https://serverlessworkflow.io/spec/1.1.0/errors/runtime");
+        .isEqualTo("https://openworkflow.cloud/spec/1.1.0/errors/runtime");
     assertThat(def.getStatus()).isEqualTo(500);
     assertThat(def.getTitle().get()).isEqualTo("Boom");
     assertThat(def.getDetail().get()).isEqualTo("x");

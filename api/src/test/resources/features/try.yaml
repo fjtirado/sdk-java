@@ -15,7 +15,7 @@ do:
       catch:
         errors:
           with:
-            type: https://serverlessworkflow.io/dsl/errors/types/communication
+            type: https://openworkflow.cloud/dsl/errors/types/communication
             status: 404
         as: err
         do:
