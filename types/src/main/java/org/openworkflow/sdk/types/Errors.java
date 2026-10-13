@@ -35,7 +35,24 @@ public final class Errors {
       new AtomicReference<>(() -> "1.0.0");
 
   private static final AtomicReference<String> BASE_PATTERN =
-      new AtomicReference<>("https://open-workflow-specification.org/%s/errors/");
+      new AtomicReference<>("https://open-workflow-specification.org/spec/%s/errors/");
+
+  private static final String CURRENT_PREFIX = "https://open-workflow-specification.org/spec/";
+  private static final String LEGACY_PREFIX = "https://serverlessworkflow.io/spec/";
+
+  public static boolean legacyEqual(String one, String other) {
+    boolean replaced = false;
+    if (one.startsWith(LEGACY_PREFIX)) {
+      replaced = true;
+      one = one.replace(LEGACY_PREFIX, CURRENT_PREFIX);
+    }
+
+    if (other.startsWith(LEGACY_PREFIX)) {
+      replaced = true;
+      other = other.replace(LEGACY_PREFIX, CURRENT_PREFIX);
+    }
+    return replaced && one.equals(other);
+  }
 
   public static void setSpecVersion(String version) {
     Objects.requireNonNull(version, "version");

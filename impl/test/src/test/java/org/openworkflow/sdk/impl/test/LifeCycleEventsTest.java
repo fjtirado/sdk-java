@@ -108,14 +108,18 @@ class LifeCycleEventsTest {
             .join();
     assertThat(model.asMap()).hasValueSatisfying(m -> assertThat(m).hasSize(3));
     WorkflowStartedCEData workflowStartedEvent =
-        assertPojoInCE("org.openworkflow.workflow.started.v1", WorkflowStartedCEData.class);
+        assertPojoInCE(
+            "org.open-workflow-specification.workflow.started.v1", WorkflowStartedCEData.class);
     TaskStartedCEData taskStartedEvent =
-        assertPojoInCE("org.openworkflow.task.started.v1", TaskStartedCEData.class);
+        assertPojoInCE("org.open-workflow-specification.task.started.v1", TaskStartedCEData.class);
     TaskCompletedCEDataWithOutput taskCompletedEvent =
-        assertPojoInCE("org.openworkflow.task.completed.v1", TaskCompletedCEDataWithOutput.class);
+        assertPojoInCE(
+            "org.open-workflow-specification.task.completed.v1",
+            TaskCompletedCEDataWithOutput.class);
     WorkflowCompletedCEDataWithOutput workflowCompletedEvent =
         assertPojoInCE(
-            "org.openworkflow.workflow.completed.v1", WorkflowCompletedCEDataWithOutput.class);
+            "org.open-workflow-specification.workflow.completed.v1",
+            WorkflowCompletedCEDataWithOutput.class);
     assertThat(workflowCompletedEvent.output()).isEqualTo(model.asJavaObject());
     assertThat(workflowStartedEvent.startedAt()).isBefore(workflowCompletedEvent.completedAt());
     assertThat(taskCompletedEvent.output()).isEqualTo(model.asJavaObject());
@@ -132,7 +136,7 @@ class LifeCycleEventsTest {
         .instance(Map.of())
         .start()
         .join();
-    assertPojoInCE("org.openworkflow.workflow.completed.v1", Object.class);
+    assertPojoInCE("org.open-workflow-specification.workflow.completed.v1", Object.class);
     assertThat(appl.id()).isNotBlank();
     assertThat(publishedEvents)
         .isNotEmpty()
@@ -169,9 +173,11 @@ class LifeCycleEventsTest {
         .isEqualTo(Map.of("name", "Javierito"));
     assertThat(instance.status()).isEqualTo(WorkflowStatus.COMPLETED);
     WorkflowSuspendedCEData workflowSuspendedEvent =
-        assertPojoInCE("org.openworkflow.workflow.suspended.v1", WorkflowSuspendedCEData.class);
+        assertPojoInCE(
+            "org.open-workflow-specification.workflow.suspended.v1", WorkflowSuspendedCEData.class);
     WorkflowResumedCEData workflowResumedEvent =
-        assertPojoInCE("org.openworkflow.workflow.resumed.v1", WorkflowResumedCEData.class);
+        assertPojoInCE(
+            "org.open-workflow-specification.workflow.resumed.v1", WorkflowResumedCEData.class);
     assertThat(workflowSuspendedEvent.suspendedAt())
         .isBeforeOrEqualTo(workflowResumedEvent.resumedAt());
   }
@@ -190,8 +196,9 @@ class LifeCycleEventsTest {
     assertThat(catchThrowableOfType(ExecutionException.class, () -> future.get().asMap()))
         .isNotNull();
     assertThat(instance.status()).isEqualTo(WorkflowStatus.CANCELLED);
-    assertPojoInCE("org.openworkflow.task.cancelled.v1", TaskCancelledCEData.class);
-    assertPojoInCE("org.openworkflow.workflow.cancelled.v1", WorkflowCancelledCEData.class);
+    assertPojoInCE("org.open-workflow-specification.task.cancelled.v1", TaskCancelledCEData.class);
+    assertPojoInCE(
+        "org.open-workflow-specification.workflow.cancelled.v1", WorkflowCancelledCEData.class);
   }
 
   @ParameterizedTest(name = "{0}")
@@ -222,7 +229,9 @@ class LifeCycleEventsTest {
                 () -> appl.workflowDefinition(workflow).instance(Map.of()).start().join()))
         .isNotNull();
     WorkflowError error =
-        assertPojoInCE("org.openworkflow.workflow.faulted.v1", WorkflowFailedCEData.class).error();
+        assertPojoInCE(
+                "org.open-workflow-specification.workflow.faulted.v1", WorkflowFailedCEData.class)
+            .error();
     assertThat(error.type())
         .isEqualTo("https://open-workflow-specification.org/1.0.0/errors/not-implemented");
     assertThat(error.title()).isEqualTo("Not Implemented");

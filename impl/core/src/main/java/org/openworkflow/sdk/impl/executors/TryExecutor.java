@@ -51,6 +51,7 @@ import org.openworkflow.sdk.impl.executors.retry.ExponentialRetryIntervalFunctio
 import org.openworkflow.sdk.impl.executors.retry.LinearRetryIntervalFunction;
 import org.openworkflow.sdk.impl.executors.retry.RetryExecutor;
 import org.openworkflow.sdk.impl.executors.retry.RetryIntervalFunction;
+import org.openworkflow.sdk.types.Errors;
 
 public class TryExecutor extends RegularTaskExecutor<TryTask> {
 
@@ -340,7 +341,7 @@ public class TryExecutor extends RegularTaskExecutor<TryTask> {
   }
 
   private static boolean filterError(WorkflowError error, ErrorFilter errorFilter) {
-    return compareString(errorFilter.getType(), error.type())
+    return compareType(errorFilter.getType(), error.type())
         && (errorFilter.getStatus() <= 0 || error.status() == errorFilter.getStatus())
         && compareString(errorFilter.getInstance(), error.instance())
         && compareString(errorFilter.getTitle(), error.title())
@@ -349,6 +350,10 @@ public class TryExecutor extends RegularTaskExecutor<TryTask> {
 
   private static boolean compareString(String one, String other) {
     return one == null || one.equals(other);
+  }
+
+  private static boolean compareType(String one, String other) {
+    return compareString(one, other) || Errors.legacyEqual(one, other);
   }
 
   @Override
