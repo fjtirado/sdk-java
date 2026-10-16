@@ -63,6 +63,7 @@ public class ObjectMapperFactoryProvider implements Supplier<ObjectMapperFactory
       this.mapper =
           JsonMapper.builder()
               .addModule(JsonFormat.getCloudEventJacksonModule())
+              .findAndAddModules()
               .configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false)
               .disable(DateTimeFeature.WRITE_DATES_AS_TIMESTAMPS)
               .disable(DateTimeFeature.ADJUST_DATES_TO_CONTEXT_TIME_ZONE)

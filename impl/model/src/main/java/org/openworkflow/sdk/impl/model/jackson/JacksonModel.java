@@ -66,7 +66,7 @@ public class JacksonModel extends AbstractWorkflowModel {
 
   @Override
   public Optional<String> asText() {
-    return node.isTextual() ? Optional.of(node.asString()) : Optional.of(node.toString());
+    return node.isString() ? Optional.of(node.asString()) : Optional.of(node.toString());
   }
 
   @Override

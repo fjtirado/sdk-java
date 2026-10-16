@@ -24,7 +24,6 @@ import org.openworkflow.sdk.serialization.URISerializer;
 import tools.jackson.databind.DeserializationFeature;
 import tools.jackson.databind.ObjectMapper;
 import tools.jackson.databind.SerializationFeature;
-import tools.jackson.databind.cfg.JsonNodeFeature;
 import tools.jackson.databind.cfg.MapperBuilder;
 import tools.jackson.databind.json.JsonMapper;
 import tools.jackson.databind.module.SimpleModule;
@@ -64,9 +63,7 @@ class ObjectMapperFactory {
     return builder
         .enable(SerializationFeature.INDENT_OUTPUT)
         .enable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
-        .disable(SerializationFeature.WRITE_EMPTY_JSON_ARRAYS)
         .disable(SerializationFeature.FAIL_ON_EMPTY_BEANS)
-        .disable(JsonNodeFeature.WRITE_NULL_PROPERTIES)
         .addModule(validationModule)
         .changeDefaultPropertyInclusion(
             v ->
