@@ -15,7 +15,6 @@
  */
 package org.openworkflow.sdk.impl.container.executors;
 
-import static org.openworkflow.sdk.api.types.ContainerLifetime.*;
 import static org.openworkflow.sdk.impl.WorkflowUtils.isValid;
 
 import com.github.dockerjava.api.DockerClient;
@@ -42,12 +41,9 @@ import org.openworkflow.sdk.impl.WorkflowModel;
 import org.openworkflow.sdk.impl.WorkflowUtils;
 import org.openworkflow.sdk.impl.WorkflowValueResolver;
 import org.openworkflow.sdk.impl.executors.CallableTask;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 class ContainerRunner implements CallableTask {
 
-  private static final Logger logger = LoggerFactory.getLogger(ContainerRunner.class);
   private final Collection<ContainerPropertySetter> propertySetters;
   private final Optional<WorkflowValueResolver<Duration>> timeout;
   private final ContainerCleanupPolicy policy;
