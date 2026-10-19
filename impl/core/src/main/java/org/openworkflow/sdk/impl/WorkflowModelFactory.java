@@ -51,28 +51,19 @@ public interface WorkflowModelFactory extends ServicePriority {
     return fromAny(obj);
   }
 
-  @SuppressWarnings("unchecked")
+  @SuppressWarnings({"unchecked", "rawtypes"})
   default WorkflowModel fromAny(Object obj) {
-    if (obj == null) {
-      return fromNull();
-    } else if (obj instanceof Boolean value) {
-      return from(value);
-    } else if (obj instanceof Number value) {
-      return from(value);
-    } else if (obj instanceof String value) {
-      return from(value);
-    } else if (obj instanceof CloudEvent value) {
-      return from(value);
-    } else if (obj instanceof CloudEventData value) {
-      return from(value);
-    } else if (obj instanceof OffsetDateTime value) {
-      return from(value);
-    } else if (obj instanceof Map) {
-      return from((Map<String, Object>) obj);
-    } else if (obj instanceof WorkflowModel model) {
-      return model;
-    } else {
-      return fromOther(obj);
-    }
+    return switch (obj) {
+      case null -> fromNull();
+      case Boolean value -> from(value);
+      case Number value -> from(value);
+      case String value -> from(value);
+      case CloudEvent value -> from(value);
+      case CloudEventData value -> from(value);
+      case OffsetDateTime value -> from(value);
+      case Map map -> from(map);
+      case WorkflowModel model -> model;
+      default -> fromOther(obj);
+    };
   }
 }

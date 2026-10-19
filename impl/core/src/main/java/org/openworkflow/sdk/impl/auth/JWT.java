@@ -52,27 +52,25 @@ public record JWT(String token, Map<String, Object> header, Map<String, Object> 
   }
 
   static Optional<Instant> toInstant(Object v) {
-    if (v == null) {
-      return Optional.empty();
-    }
-    if (v instanceof Instant i) {
-      return Optional.of(i);
-    }
-    if (v instanceof Number n) {
-      return Optional.of(Instant.ofEpochSecond((n.longValue())));
-    }
-    if (v instanceof String s) {
+    return switch (v) {
+      case Instant i -> Optional.of(i);
+      case Number n -> Optional.of(Instant.ofEpochSecond((n.longValue())));
+      case String s -> toInstant(s);
+      case null, default -> Optional.empty();
+    };
+  }
+
+  private static Optional<Instant> toInstant(String s) {
+    try {
+      long sec = Long.parseLong(s.trim());
+      return Optional.of(Instant.ofEpochSecond((sec)));
+    } catch (NumberFormatException ignored) {
       try {
-        long sec = Long.parseLong(s.trim());
-        return Optional.of(Instant.ofEpochSecond((sec)));
-      } catch (NumberFormatException ignored) {
-        try {
-          return Optional.of(Instant.parse(s.trim()));
-        } catch (DateTimeParseException ex) {
-        }
+        return Optional.of(Instant.parse(s.trim()));
+      } catch (DateTimeParseException ex) {
+        return Optional.empty();
       }
     }
-    return Optional.empty();
   }
 
   /* Does not support primitive types intentionally, as they are not used in that context. */

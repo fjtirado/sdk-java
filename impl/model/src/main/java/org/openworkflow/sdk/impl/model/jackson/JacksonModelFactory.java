@@ -66,23 +66,16 @@ public class JacksonModelFactory implements WorkflowModelFactory {
 
   @Override
   public WorkflowModel from(Number number) {
-    if (number instanceof Double value) {
-      return new JacksonModel(new DoubleNode(value));
-    } else if (number instanceof BigDecimal) {
-      return new JacksonModel(new DoubleNode(number.doubleValue()));
-    } else if (number instanceof Float value) {
-      return new JacksonModel(new FloatNode(value));
-    } else if (number instanceof Long value) {
-      return new JacksonModel(new LongNode(value));
-    } else if (number instanceof Integer value) {
-      return new JacksonModel(new IntNode(value));
-    } else if (number instanceof Short value) {
-      return new JacksonModel(new ShortNode(value));
-    } else if (number instanceof Byte value) {
-      return new JacksonModel(new ShortNode(value));
-    } else {
-      return new JacksonModel(new LongNode(number.longValue()));
-    }
+    return switch (number) {
+      case Double value -> new JacksonModel(new DoubleNode(value));
+      case BigDecimal value -> new JacksonModel(new DoubleNode(value.doubleValue()));
+      case Float value -> new JacksonModel(new FloatNode(value));
+      case Long value -> new JacksonModel(new LongNode(value));
+      case Integer value -> new JacksonModel(new IntNode(value));
+      case Short value -> new JacksonModel(new ShortNode(value));
+      case Byte value -> new JacksonModel(new ShortNode(value));
+      default -> new JacksonModel(new LongNode(number.longValue()));
+    };
   }
 
   @Override

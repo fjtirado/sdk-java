@@ -87,12 +87,8 @@ public abstract class AbstractEventPropertiesBuilder<
   }
 
   public SELF data(Object obj) {
-    if (obj instanceof EventData) {
-      eventProperties.setData((EventData) obj);
-    } else {
-      eventProperties.setData(new EventData().withObject(obj));
-    }
-
+    eventProperties.setData(
+        obj instanceof EventData eventData ? eventData : new EventData().withObject(obj));
     return self();
   }
 

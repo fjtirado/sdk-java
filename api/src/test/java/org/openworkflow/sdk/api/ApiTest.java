@@ -42,8 +42,7 @@ public class ApiTest {
     assertThat(workflow.getDo().get(0).getName()).isNotNull();
     assertThat(workflow.getDo().get(0).getTask()).isNotNull();
     Task task = workflow.getDo().get(0).getTask();
-    if (task.get() instanceof CallTask) {
-      CallTask callTask = task.getCallTask();
+    if (task.get() instanceof CallTask callTask) {
       assertThat(callTask).isNotNull();
       assertThat(task.getDoTask()).isNull();
       CallHTTP httpCall = callTask.getCallHTTP();

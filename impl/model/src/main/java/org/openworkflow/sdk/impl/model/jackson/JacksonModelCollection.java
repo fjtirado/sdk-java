@@ -174,9 +174,7 @@ public class JacksonModelCollection implements WorkflowModelCollection {
 
   @Override
   public boolean equals(Object obj) {
-    if (this == obj) return true;
-    if (!(obj instanceof JacksonModelCollection)) return false;
-    JacksonModelCollection other = (JacksonModelCollection) obj;
-    return Objects.equals(node, other.node);
+    return this == obj
+        || obj instanceof JacksonModelCollection other && Objects.equals(node, other.node);
   }
 }

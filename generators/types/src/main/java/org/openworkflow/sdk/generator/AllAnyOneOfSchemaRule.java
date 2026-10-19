@@ -131,23 +131,20 @@ class AllAnyOneOfSchemaRule extends SchemaRule {
     } else {
       JPackage container = generatableType.getPackage();
       javaType = ruleFactory.getTypeRule().apply(nodeName, schemaNode, parent, container, schema);
-      if (javaType instanceof JDefinedClass) {
-        javaType =
-            populateAllOf(
-                schema, populateRef((JDefinedClass) javaType, refType, schema), allOfTypes);
+      if (javaType instanceof JDefinedClass classType) {
+        javaType = populateAllOf(schema, populateRef(classType, refType, schema), allOfTypes);
       }
       if (!oneOfTypes.isEmpty()) {
         try {
           JDefinedClass unionClass;
           Optional<JType> commonType;
-          if (javaType instanceof JDefinedClass) {
-            JDefinedClass clazz = (JDefinedClass) javaType;
-            if (clazz.methods().isEmpty()) {
-              unionClass = clazz;
+          if (javaType instanceof JDefinedClass classType) {
+            if (classType.methods().isEmpty()) {
+              unionClass = classType;
               commonType = Optional.empty();
             } else {
-              unionClass = container._class(clazz.name() + "Union");
-              commonType = Optional.of(clazz);
+              unionClass = container._class(classType.name() + "Union");
+              commonType = Optional.of(classType);
             }
           } else {
             unionClass =
@@ -299,9 +296,8 @@ class AllAnyOneOfSchemaRule extends SchemaRule {
       if (isStringType(unionType.getType())) {
         stringTypes.add(unionType);
       } else {
-        if (unionType.getType() instanceof JDefinedClass) {
-          commonType.ifPresent(
-              c -> ((JDefinedClass) unionType.getType())._extends((JDefinedClass) c));
+        if (unionType.getType() instanceof JDefinedClass definedUnionType) {
+          commonType.ifPresent(c -> definedUnionType._extends((JDefinedClass) c));
         }
 
         wrapIt(parentSchema, definedClass, valueField, unionType.getType(), unionType.getNode());
@@ -317,8 +313,8 @@ class AllAnyOneOfSchemaRule extends SchemaRule {
       JDefinedClass definedClass, Optional<JType> refType, Schema parentSchema) {
     refType.ifPresent(
         type -> {
-          if (type instanceof JClass) {
-            definedClass._extends((JClass) type);
+          if (type instanceof JClass classType) {
+            definedClass._extends(classType);
           } else {
             wrapIt(parentSchema, definedClass, Optional.empty(), type, null);
           }

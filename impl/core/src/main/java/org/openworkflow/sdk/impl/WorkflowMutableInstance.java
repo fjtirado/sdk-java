@@ -160,17 +160,15 @@ public class WorkflowMutableInstance implements WorkflowInstance {
   private CompletableFuture<WorkflowModel> handleException(Throwable exception) {
     final Throwable cause =
         exception instanceof CompletionException ? exception.getCause() : exception;
-    if (cause instanceof CancellationException) {
-      return CompletableFuture.failedFuture(cause);
-    } else {
-      return status(WorkflowStatus.FAULTED)
-          .thenCompose(
-              __ ->
-                  publishEvent(
-                      workflowContext,
-                      l -> l.onWorkflowFailed(new WorkflowFailedEvent(workflowContext, cause))))
-          .thenCompose(__ -> CompletableFuture.failedFuture(exception));
-    }
+    return cause instanceof CancellationException
+        ? CompletableFuture.failedFuture(cause)
+        : status(WorkflowStatus.FAULTED)
+            .thenCompose(
+                __ ->
+                    publishEvent(
+                        workflowContext,
+                        l -> l.onWorkflowFailed(new WorkflowFailedEvent(workflowContext, cause))))
+            .thenCompose(__ -> CompletableFuture.failedFuture(exception));
   }
 
   private WorkflowModel filterAndValidate(WorkflowModel model) {

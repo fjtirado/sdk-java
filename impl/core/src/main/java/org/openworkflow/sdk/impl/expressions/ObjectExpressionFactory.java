@@ -40,16 +40,14 @@ public abstract class ObjectExpressionFactory extends AbstractExpressionFactory 
     throw new IllegalArgumentException("Both object and str are null");
   }
 
+  @SuppressWarnings({"rawtypes", "unchecked"})
   private Object buildExpressionObject(Object obj, ExpressionFactory factory) {
-    if (obj instanceof ObjectExpression expr) {
-      return expr;
-    } else if (obj instanceof Map map) {
-      return buildExpressionMap(map, factory);
-    } else if (obj instanceof Collection col) {
-      return buildExpressionCollection(col, factory);
-    } else {
-      return obj;
-    }
+    return switch (obj) {
+      case ObjectExpression expr -> expr;
+      case Map map -> buildExpressionMap(map, factory);
+      case Collection col -> buildExpressionCollection(col, factory);
+      case null, default -> obj;
+    };
   }
 
   @Override
@@ -61,17 +59,15 @@ public abstract class ObjectExpressionFactory extends AbstractExpressionFactory 
         : super.priority(desc);
   }
 
+  @SuppressWarnings({"rawtypes", "unchecked"})
   private Object evaluateExpressionObject(
       Object obj, WorkflowContext workflow, TaskContext task, WorkflowModel model) {
-    if (obj instanceof ObjectExpression expr) {
-      return toJavaObject(expr.eval(workflow, task, model));
-    } else if (obj instanceof Map map) {
-      return evaluateExpressionMap(map, workflow, task, model);
-    } else if (obj instanceof Collection col) {
-      return evaluateExpressionCollection(col, workflow, task, model);
-    } else {
-      return obj;
-    }
+    return switch (obj) {
+      case ObjectExpression expr -> toJavaObject(expr.eval(workflow, task, model));
+      case Map map -> evaluateExpressionMap(map, workflow, task, model);
+      case Collection col -> evaluateExpressionCollection(col, workflow, task, model);
+      case null, default -> obj;
+    };
   }
 
   @Override

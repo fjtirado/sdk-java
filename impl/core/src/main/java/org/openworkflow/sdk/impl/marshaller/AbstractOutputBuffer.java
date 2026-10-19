@@ -63,56 +63,70 @@ public abstract class AbstractOutputBuffer implements WorkflowOutputBuffer {
     return this;
   }
 
+  @SuppressWarnings({"unchecked", "rawtypes"})
   @Override
   public WorkflowOutputBuffer writeObject(Object object) {
-    if (object == null) {
-      writeType(Type.NULL);
-    } else if (object instanceof WorkflowModel) {
-      internalWriteObject(object);
-    } else if (object instanceof Short number) {
-      writeType(Type.SHORT);
-      writeShort(number);
-    } else if (object instanceof Integer number) {
-      writeType(Type.INT);
-      writeInt(number);
-    } else if (object instanceof Long number) {
-      writeType(Type.LONG);
-      writeLong(number);
-    } else if (object instanceof Byte number) {
-      writeType(Type.BYTE);
-      writeByte(number);
-    } else if (object instanceof Float number) {
-      writeType(Type.FLOAT);
-      writeFloat(number);
-    } else if (object instanceof Double number) {
-      writeType(Type.DOUBLE);
-      writeDouble(number);
-    } else if (object instanceof Boolean bool) {
-      writeType(Type.BOOLEAN);
-      writeBoolean(bool);
-    } else if (object instanceof String str) {
-      writeType(Type.STRING);
-      writeString(str);
-    } else if (object instanceof Map value) {
-      writeType(Type.MAP);
-      writeMap(value);
-    } else if (object instanceof Collection value) {
-      writeType(Type.COLLECTION);
-      writeCollection(value);
-    } else if (object instanceof Instant value) {
-      writeType(Type.INSTANT);
-      writeInstant(value);
-    } else if (object instanceof OffsetDateTime value) {
-      writeType(Type.OFFSET_DATE_TIME);
-      writeOffsetDateTime(value);
-    } else if (object instanceof URI value) {
-      writeType(Type.URI);
-      writeString(value.toString());
-    } else if (object instanceof byte[] value) {
-      writeType(Type.BYTES);
-      writeBytes(value);
-    } else {
-      internalWriteObject(object);
+
+    switch (object) {
+      case null -> writeType(Type.NULL);
+      case WorkflowModel model -> internalWriteObject(model);
+      case Short number -> {
+        writeType(Type.SHORT);
+        writeShort(number);
+      }
+      case Integer number -> {
+        writeType(Type.INT);
+        writeInt(number);
+      }
+      case Long number -> {
+        writeType(Type.LONG);
+        writeLong(number);
+      }
+      case Float number -> {
+        writeType(Type.FLOAT);
+        writeFloat(number);
+      }
+      case Double number -> {
+        writeType(Type.DOUBLE);
+        writeDouble(number);
+      }
+      case Boolean bool -> {
+        writeType(Type.BOOLEAN);
+        writeBoolean(bool);
+      }
+      case String str -> {
+        writeType(Type.STRING);
+        writeString(str);
+      }
+      case Map value -> {
+        writeType(Type.MAP);
+        writeMap(value);
+      }
+      case Collection value -> {
+        writeType(Type.COLLECTION);
+        writeCollection(value);
+      }
+      case Instant value -> {
+        writeType(Type.INSTANT);
+        writeInstant(value);
+      }
+      case OffsetDateTime value -> {
+        writeType(Type.OFFSET_DATE_TIME);
+        writeOffsetDateTime(value);
+      }
+      case URI value -> {
+        writeType(Type.URI);
+        writeString(value.toString());
+      }
+      case Byte number -> {
+        writeType(Type.BYTE);
+        writeByte(number);
+      }
+      case byte[] value -> {
+        writeType(Type.BYTES);
+        writeBytes(value);
+      }
+      default -> internalWriteObject(object);
     }
     return this;
   }

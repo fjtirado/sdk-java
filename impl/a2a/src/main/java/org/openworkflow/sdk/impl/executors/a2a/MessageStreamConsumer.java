@@ -26,10 +26,14 @@ import org.openworkflow.sdk.impl.WorkflowDefinition;
 import org.openworkflow.sdk.impl.WorkflowException;
 import org.openworkflow.sdk.impl.WorkflowModel;
 import org.openworkflow.sdk.impl.WorkflowPosition;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 class MessageStreamConsumer extends MessageConsumer {
 
   private final WorkflowPosition position;
+
+  private static final Logger logger = LoggerFactory.getLogger(MessageStreamConsumer.class);
 
   public MessageStreamConsumer(
       WorkflowDefinition definition,
@@ -41,12 +45,12 @@ class MessageStreamConsumer extends MessageConsumer {
 
   @Override
   public void accept(ClientEvent event, AgentCard card) {
-    if (event instanceof MessageEvent resp) {
-      completableFuture.complete(A2AUtils.fromMessage(factory, resp.getMessage()));
-    } else if (event instanceof TaskUpdateEvent resp) {
-      checkTaskCompletion(resp.getTask());
-    } else if (event instanceof TaskEvent resp) {
-      checkTaskCompletion(resp.getTask());
+    switch (event) {
+      case MessageEvent resp ->
+          completableFuture.complete(A2AUtils.fromMessage(factory, resp.getMessage()));
+      case TaskUpdateEvent resp -> checkTaskCompletion(resp.getTask());
+      case TaskEvent resp -> checkTaskCompletion(resp.getTask());
+      default -> logger.warn("Unrecognized client event {}", event);
     }
   }
 
