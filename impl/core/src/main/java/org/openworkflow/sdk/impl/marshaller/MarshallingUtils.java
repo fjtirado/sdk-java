@@ -128,18 +128,16 @@ public class MarshallingUtils {
     while (size-- > 0) {
       String extensionName = in.readString();
       Object extensionValue = in.readObject();
-      if (extensionValue instanceof Number extValue) {
-        builder.withExtension(extensionName, extValue);
-      } else if (extensionValue instanceof String extValue) {
-        builder.withExtension(extensionName, extValue);
-      } else if (extensionValue instanceof Boolean extValue) {
-        builder.withExtension(extensionName, extValue);
-      } else if (extensionValue instanceof byte[] extValue) {
-        builder.withExtension(extensionName, extValue);
-      } else if (extensionValue instanceof OffsetDateTime extValue) {
-        builder.withExtension(extensionName, extValue);
-      } else if (extensionValue instanceof URI extValue) {
-        builder.withExtension(extensionName, extValue);
+      switch (extensionValue) {
+        case Number extValue -> builder.withExtension(extensionName, extValue);
+        case String extValue -> builder.withExtension(extensionName, extValue);
+        case Boolean extValue -> builder.withExtension(extensionName, extValue);
+        case byte[] extValue -> builder.withExtension(extensionName, extValue);
+        case OffsetDateTime extValue -> builder.withExtension(extensionName, extValue);
+        case URI extValue -> builder.withExtension(extensionName, extValue);
+        case null, default ->
+            logger.warn(
+                "Unsupported value {} for extension name {}", extensionValue, extensionName);
       }
     }
     return builder;

@@ -29,6 +29,7 @@ With the SDK you can:
 
 | SDK Version | JDK Version |
 | :---: | :---: |
+| 8.0.0 and after | 21 |
 | 7.0.0 and after | 17 |
 | 5.0.0 and after | 11 |
 | 4.0.x and before | 8 | 

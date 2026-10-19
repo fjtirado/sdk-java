@@ -145,7 +145,7 @@ implementation("org.openworkflow.sdk:openworkflow-impl-http")        // if using
 implementation("org.openworkflow.sdk:openworkflow-impl-jackson-jwt") // if using OAuth2/OIDC
 ```
 
-> Requires **Java 17+**.
+> Requires **Java 21+**.
 
 ---
 
@@ -290,7 +290,7 @@ See `impl` tests/examples for consuming and asserting on these events.
 
 **Prereqs**
 
-* Java 17+
+* Java 21+
 * Maven (or Gradle)
 
 **Build & Verify**

@@ -96,45 +96,28 @@ public class JsonUtils {
    * Although we can use directly ObjectMapper.convertValue for implementing fromValue and toJavaValue methods,
    * the performance gain of avoiding an intermediate buffer is so tempting that we cannot avoid it
    */
-  @SuppressWarnings("unchecked")
-  public static JsonNode fromValue(Object value) {
-    if (value == null) {
-      return NullNode.instance;
-    } else if (value instanceof JsonNode) {
-      return (JsonNode) value;
-    } else if (value instanceof Boolean) {
-      return BooleanNode.valueOf((Boolean) value);
-    } else if (value instanceof String) {
-      return fromString((String) value);
-    } else if (value instanceof Short) {
-      return new ShortNode((Short) value);
-    } else if (value instanceof Integer) {
-      return new IntNode((Integer) value);
-    } else if (value instanceof Long) {
-      return new LongNode((Long) value);
-    } else if (value instanceof Float) {
-      return new FloatNode((Float) value);
-    } else if (value instanceof Double) {
-      return new DoubleNode((Double) value);
-    } else if (value instanceof BigDecimal) {
-      return DecimalNode.valueOf((BigDecimal) value);
-    } else if (value instanceof BigInteger) {
-      return BigIntegerNode.valueOf((BigInteger) value);
-    } else if (value instanceof byte[]) {
-      return BinaryNode.valueOf((byte[]) value);
-    } else if (value instanceof Collection) {
-      return mapToArray((Collection<?>) value);
-    } else if (value instanceof Map) {
-      return mapToNode((Map<String, Object>) value);
-    } else if (value instanceof WorkflowModel model) {
-      return modelToJson(model);
-    } else if (value instanceof CloudEvent ce) {
-      return JacksonCloudEventUtils.toJsonNode(ce);
-    } else if (value instanceof CloudEventData data) {
-      return JacksonCloudEventUtils.toJsonNode(data);
-    } else {
-      return mapper().convertValue(value, JsonNode.class);
-    }
+  @SuppressWarnings({"unchecked", "rawtypes"})
+  public static JsonNode fromValue(Object v) {
+    return switch (v) {
+      case null -> NullNode.instance;
+      case JsonNode value -> value;
+      case Boolean value -> BooleanNode.valueOf(value);
+      case String value -> fromString((String) value);
+      case Short value -> new ShortNode(value);
+      case Integer value -> new IntNode(value);
+      case Long value -> new LongNode(value);
+      case Float value -> new FloatNode(value);
+      case Double value -> new DoubleNode(value);
+      case BigDecimal value -> DecimalNode.valueOf(value);
+      case BigInteger value -> BigIntegerNode.valueOf(value);
+      case byte[] value -> BinaryNode.valueOf(value);
+      case Collection value -> mapToArray(value);
+      case Map value -> mapToNode(value);
+      case WorkflowModel model -> modelToJson(model);
+      case CloudEvent ce -> JacksonCloudEventUtils.toJsonNode(ce);
+      case CloudEventData data -> JacksonCloudEventUtils.toJsonNode(data);
+      default -> mapper().convertValue(v, JsonNode.class);
+    };
   }
 
   public static JsonNode modelToJson(WorkflowModel model) {

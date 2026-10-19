@@ -6,7 +6,7 @@ Thanks for helping improve this project! This guide explains the local dev setup
 
 ## TL;DR (Fast path)
 
-1. **Install prerequisites:** JDK 17+, Maven 3.8+, Git.
+1. **Install prerequisites:** JDK 21+, Maven 3.9.16+, Git.
 2. **Clone** the repo and create a branch: `git checkout -b my-fix`.
 3. **Build locally:** run `mvn clean install` from the repo root. Spotless will **apply formatting and license headers** during the build.
 4. **Before pushing:** run `mvn -DskipTests spotless:check checkstyle:check`.
@@ -19,7 +19,7 @@ Thanks for helping improve this project! This guide explains the local dev setup
 ### Java, Maven, and modules
 
 * This is a **multi-module Maven** project.
-* **Java 17** is the baseline.
+* **Java 21** is the baseline.
 * Build with `mvn -B verify` (CI runs with `-DskipTests` selectively when needed).
 
 ### Formatting and License Headers
@@ -41,7 +41,7 @@ We keep **Checkstyle** to enforce additional rules. CI fails if formatting or st
 
 ### Prerequisites
 
-* **JDK 17+**
+* **JDK 21+**
 * **Maven 3.8+**
 * **Git**
 * Optional IDE plugins:

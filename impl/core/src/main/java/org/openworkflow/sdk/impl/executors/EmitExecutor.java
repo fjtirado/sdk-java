@@ -42,10 +42,14 @@ import org.openworkflow.sdk.impl.events.CloudEventUtils;
 import org.openworkflow.sdk.impl.events.EmittedEventDecorator;
 import org.openworkflow.sdk.impl.events.EventPublisher;
 import org.openworkflow.sdk.impl.expressions.ExpressionDescriptor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class EmitExecutor extends RegularTaskExecutor<EmitTask> {
 
   private final EventPropertiesBuilder props;
+
+  private static final Logger logger = LoggerFactory.getLogger(EmitExecutor.class);
 
   public static class EmitExecutorBuilder
       extends RegularTaskExecutorBuilder<EmitTask, EmitExecutor> {
@@ -142,14 +146,14 @@ public class EmitExecutor extends RegularTaskExecutor<EmitTask> {
   }
 
   private static void addExtension(CloudEventBuilder builder, String name, Object value) {
-    if (value instanceof String s) {
-      builder.withExtension(name, s);
-    } else if (value instanceof Boolean b) {
-      builder.withExtension(name, b);
-    } else if (value instanceof Number n) {
-      builder.withExtension(name, n);
-    } else if (value instanceof OffsetDateTime t) {
-      builder.withExtension(name, t);
+
+    switch (value) {
+      case String v -> builder.withExtension(name, v);
+      case Boolean v -> builder.withExtension(name, v);
+      case Number v -> builder.withExtension(name, v);
+      case OffsetDateTime v -> builder.withExtension(name, v);
+      case null, default ->
+          logger.warn("Unsupported value {} for cloud event extension {}", value, name);
     }
   }
 

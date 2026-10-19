@@ -231,14 +231,12 @@ public class TryExecutor extends RegularTaskExecutor<TryTask> {
 
   private CompletableFuture<WorkflowModel> handleException(
       Throwable e, WorkflowContext workflow, TaskContext taskContext) {
-    Throwable cause = e instanceof CompletionException ? e.getCause() : e;
-    if (cause instanceof TimeoutException timeout) {
-      return handleException(timeoutToWorkflow(timeout, taskContext), workflow, taskContext);
-    } else if (cause instanceof WorkflowException exception) {
-      return handleException(exception, workflow, taskContext);
-    } else {
-      return CompletableFuture.failedFuture(e);
-    }
+    return switch (e instanceof CompletionException ? e.getCause() : e) {
+      case TimeoutException timeout ->
+          handleException(timeoutToWorkflow(timeout, taskContext), workflow, taskContext);
+      case WorkflowException exception -> handleException(exception, workflow, taskContext);
+      case null, default -> CompletableFuture.failedFuture(e);
+    };
   }
 
   private CompletableFuture<WorkflowModel> handleException(

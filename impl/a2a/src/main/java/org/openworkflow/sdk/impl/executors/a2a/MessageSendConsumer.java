@@ -22,8 +22,12 @@ import org.a2aproject.sdk.client.TaskEvent;
 import org.a2aproject.sdk.spec.AgentCard;
 import org.openworkflow.sdk.impl.WorkflowDefinition;
 import org.openworkflow.sdk.impl.WorkflowModel;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 class MessageSendConsumer extends MessageConsumer {
+
+  private static final Logger logger = LoggerFactory.getLogger(MessageSendConsumer.class);
 
   public MessageSendConsumer(
       WorkflowDefinition definition, CompletableFuture<WorkflowModel> completableFuture) {
@@ -32,10 +36,11 @@ class MessageSendConsumer extends MessageConsumer {
 
   @Override
   public void accept(ClientEvent event, AgentCard card) {
-    if (event instanceof MessageEvent resp) {
-      completableFuture.complete(A2AUtils.fromMessage(factory, resp.getMessage()));
-    } else if (event instanceof TaskEvent resp) {
-      completableFuture.complete(A2AUtils.fromTask(factory, resp.getTask()));
+    switch (event) {
+      case MessageEvent resp ->
+          completableFuture.complete(A2AUtils.fromMessage(factory, resp.getMessage()));
+      case TaskEvent resp -> completableFuture.complete(A2AUtils.fromTask(factory, resp.getTask()));
+      default -> logger.warn("Unrecognized client event {}", event);
     }
   }
 }

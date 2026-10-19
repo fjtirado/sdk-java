@@ -54,16 +54,12 @@ class PortsPropertySetter implements ContainerPropertySetter {
   }
 
   private static Integer from(Object obj) {
-    if (obj instanceof Integer number) {
-      return number;
-    } else if (obj instanceof Number number) {
-      return number.intValue();
-    } else if (obj instanceof String str) {
-      return Integer.parseInt(str);
-    } else if (obj != null) {
-      return Integer.parseInt(obj.toString());
-    } else {
-      throw new IllegalArgumentException("Null value for port key");
-    }
+    return switch (obj) {
+      case Integer number -> number;
+      case Number number -> number.intValue();
+      case String str -> Integer.parseInt(str);
+      case null -> throw new IllegalArgumentException("Null value for port key");
+      default -> Integer.parseInt(obj.toString());
+    };
   }
 }

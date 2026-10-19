@@ -23,7 +23,7 @@ public class ExpressionUtils {
   private ExpressionUtils() {}
 
   public static boolean isExpr(Object expr) {
-    return expr instanceof String && ((String) expr).startsWith(EXPR_PREFIX);
+    return expr instanceof String str && str.startsWith(EXPR_PREFIX);
   }
 
   public static String trimExpr(String expr) {
