@@ -51,7 +51,7 @@ public class DefaultResourceLoader extends ResourceLoader {
             .content();
   }
 
-  private ExternalResourceHandler fileResource(String pathStr) {
+  protected ExternalResourceHandler fileResource(String pathStr) {
     Path path = Path.of(pathStr);
     if (path.isAbsolute()) {
       return new FileResource(path);
@@ -62,16 +62,24 @@ public class DefaultResourceLoader extends ResourceLoader {
     }
   }
 
+  protected ExternalResourceHandler httpResource(URI uri, Optional<String> auth) {
+    try {
+      return new HttpResource(uri.toURL(), auth);
+    } catch (MalformedURLException e) {
+      throw new IllegalArgumentException(e);
+    }
+  }
+
+  protected URI handleURI(URI uri) {
+    return GitHubHelper.handleURL(uri);
+  }
+
   private ExternalResourceHandler buildFromURI(URI uri, Optional<String> auth) {
     String scheme = uri.getScheme();
     if (scheme == null || scheme.equalsIgnoreCase("file")) {
       return fileResource(uri.getPath());
     } else if (scheme.equalsIgnoreCase("http") || scheme.equalsIgnoreCase("https")) {
-      try {
-        return new HttpResource(uri.toURL(), auth);
-      } catch (MalformedURLException e) {
-        throw new IllegalArgumentException(e);
-      }
+      return httpResource(handleURI(uri), auth);
     } else {
       throw new UnsupportedOperationException("Unsupported scheme " + scheme);
     }
