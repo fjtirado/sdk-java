@@ -15,9 +15,8 @@
  */
 package org.openworkflow.sdk.impl.resources;
 
-import java.io.UncheckedIOException;
-import java.net.MalformedURLException;
-import java.net.URL;
+import java.net.URI;
+import java.net.URISyntaxException;
 
 public class GitHubHelper {
 
@@ -25,17 +24,25 @@ public class GitHubHelper {
 
   private static final String BLOB = "blob/";
 
-  public static URL handleURL(URL url) {
-    if (url.getHost().equals("github.com")) {
-      try {
-        String path = url.getPath();
-        if (path.startsWith(BLOB)) {
-          path = path.substring(BLOB.length());
-        }
-        return new URL(url.getProtocol(), "raw.githubusercontent.com", url.getPort(), path);
-      } catch (MalformedURLException e) {
-        throw new UncheckedIOException(e);
+  public static URI handleURL(URI url) {
+    if ("github.com".equals(url.getHost())) {
+      String path = url.getPath();
+      if (path.startsWith(BLOB)) {
+        path = path.substring(BLOB.length());
       }
+      try {
+        return new URI(
+            url.getScheme(),
+            url.getUserInfo(),
+            "raw.githubusercontent.com",
+            url.getPort(),
+            path,
+            url.getQuery(),
+            url.getFragment());
+      } catch (URISyntaxException e) {
+        return url;
+      }
+
     } else {
       return url;
     }

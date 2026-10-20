@@ -32,7 +32,7 @@ public class HttpResource implements ExternalResourceHandler {
   private final Optional<String> auth;
 
   public HttpResource(URL url, Optional<String> auth) {
-    this.url = GitHubHelper.handleURL(url);
+    this.url = url;
     this.auth = auth;
   }
 
