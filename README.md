@@ -139,7 +139,7 @@ For additional writing helper methods, check [WorkflowWriter](api/src/main/java/
 
 ## Jackson dependency
 
-`openworkflow-api` module heavily depends on Jackson for loading the file content into a in-memory POJO. For those users that use another Json Handling library, different than Jackson, in their project, the `openworkflow-types` module contains the generated Java POJOs from the OpenWorkflow schema (without any Jakcson annotation). Using this latter module as dependency, they can build a read/writer module, equivalent to `openworkflow-api`, but using their preferred json manipulation library.
+The `openworkflow-api` module depends heavily on Jackson for loading file content into an in-memory POJO. For users who use a JSON handling library other than Jackson, the `openworkflow-types` module contains Java POJOs generated from the OpenWorkflow schema without any Jackson annotations. Using this module as a dependency, they can build a reader/writer module equivalent to `openworkflow-api` with their preferred JSON library.
 
 ### Reference implementation
 
