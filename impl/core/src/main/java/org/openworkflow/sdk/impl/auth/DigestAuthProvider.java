@@ -20,8 +20,6 @@ import static org.openworkflow.sdk.impl.WorkflowUtils.secretProp;
 import static org.openworkflow.sdk.impl.auth.AuthUtils.PASSWORD;
 import static org.openworkflow.sdk.impl.auth.AuthUtils.USER;
 
-import java.io.IOException;
-import java.net.HttpURLConnection;
 import java.net.URI;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -38,9 +36,10 @@ import org.openworkflow.sdk.api.types.Workflow;
 import org.openworkflow.sdk.impl.TaskContext;
 import org.openworkflow.sdk.impl.WorkflowApplication;
 import org.openworkflow.sdk.impl.WorkflowContext;
-import org.openworkflow.sdk.impl.WorkflowModel;
 import org.openworkflow.sdk.impl.WorkflowUtils;
 import org.openworkflow.sdk.impl.WorkflowValueResolver;
+import org.openworkflow.sdk.impl.http.WorkflowHttpRequestInfo;
+import org.openworkflow.sdk.impl.http.WorkflowHttpResponse;
 import org.openworkflow.sdk.impl.utils.RandomFactory;
 
 class DigestAuthProvider implements AuthProvider {
@@ -116,6 +115,7 @@ class DigestAuthProvider implements AuthProvider {
   private final WorkflowValueResolver<String> userFilter;
   private final WorkflowValueResolver<String> passwordFilter;
   private final String method;
+  private final WorkflowApplication app;
   private final Random random = RandomFactory.getRandom();
 
   public DigestAuthProvider(
@@ -123,6 +123,7 @@ class DigestAuthProvider implements AuthProvider {
       Workflow workflow,
       DigestAuthenticationPolicy authPolicy,
       String method) {
+    this.app = app;
     DigestAuthenticationProperties properties =
         authPolicy.getDigest().getDigestAuthenticationProperties();
     if (properties != null) {
@@ -131,8 +132,8 @@ class DigestAuthProvider implements AuthProvider {
     } else if (authPolicy.getDigest().getDigestAuthenticationPolicySecret() != null) {
       String secretName =
           checkSecret(workflow, authPolicy.getDigest().getDigestAuthenticationPolicySecret());
-      userFilter = (w, t, m) -> secretProp(w, secretName, USER);
-      passwordFilter = (w, t, m) -> secretProp(w, secretName, PASSWORD);
+      userFilter = (w, t, m) -> secretProp(app, secretName, USER);
+      passwordFilter = (w, t, m) -> secretProp(app, secretName, PASSWORD);
     } else {
       throw new IllegalStateException(
           "Both secret and properties are null for digest authorization");
@@ -147,59 +148,60 @@ class DigestAuthProvider implements AuthProvider {
 
   @Override
   public CompletableFuture<String> content(
-      WorkflowContext workflow, TaskContext task, WorkflowModel model, URI uri) {
-    try {
-      HttpURLConnection connection = (HttpURLConnection) uri.toURL().openConnection();
-      connection.setRequestMethod(method);
-      int responseCode = connection.getResponseCode();
-      if (responseCode == 401) {
-        DigestServerInfo serverInfo =
-            DigestServerInfo.from(connection.getHeaderField("WWW-Authenticate"));
-        String userName = userFilter.apply(workflow, task, model);
-        String path = uri.getPath();
-        String nonceCount;
-        String clientNonce;
-        if (serverInfo.qop.isPresent() || serverInfo.algorithm == Algorithm.MD5SESSS) {
-          nonceCount = String.format(HEX, nc.getAndIncrement());
-          clientNonce = String.format(HEX, random.nextInt());
-        } else {
-          nonceCount = null;
-          clientNonce = null;
-        }
-        final String hash1 =
-            calculateHash(userName, serverInfo.realm, passwordFilter.apply(workflow, task, model));
-        final String ha1 =
-            serverInfo.algorithm == Algorithm.MD5SESSS
-                ? calculateHash(hash1, serverInfo.nonce, clientNonce)
-                : hash1;
-        final String ha2 = calculateHash(method, path);
-        String response =
-            serverInfo
-                .qop
-                .map(
-                    qop ->
-                        calculateHash(
-                            ha1,
-                            serverInfo.nonce,
-                            nonceCount,
-                            clientNonce,
-                            qop.toString().toLowerCase(),
-                            ha2))
-                .orElseGet(() -> calculateHash(ha1, serverInfo.nonce, ha2));
+      Optional<WorkflowContext> workflow, Optional<TaskContext> task, URI uri) {
+    return app.httpRequestFactory()
+        .request(app, WorkflowHttpRequestInfo.builder(method).build(uri))
+        .invoke(workflow, task)
+        .thenApply(r -> processResponse(r, uri, workflow, task));
+  }
 
-        return CompletableFuture.completedFuture(
-            buildResponseInfo(serverInfo, userName, path, clientNonce, nonceCount, response));
+  private String processResponse(
+      WorkflowHttpResponse r,
+      URI uri,
+      Optional<WorkflowContext> workflow,
+      Optional<TaskContext> task) {
+    int responseCode = r.status();
+    if (responseCode == 401) {
+      DigestServerInfo serverInfo = DigestServerInfo.from((String) r.getHeader("WWW-Authenticate"));
+      String userName = userFilter.apply(workflow, task);
+      String path = uri.getPath();
+      String nonceCount;
+      String clientNonce;
+      if (serverInfo.qop.isPresent() || serverInfo.algorithm == Algorithm.MD5SESSS) {
+        nonceCount = String.format(HEX, nc.getAndIncrement());
+        clientNonce = String.format(HEX, random.nextInt());
       } else {
-        return CompletableFuture.failedFuture(
-            new IllegalStateException(
-                "URI "
-                    + uri
-                    + " is not digest protected, it returned code "
-                    + responseCode
-                    + " when invoked without authentication header, but it should have returned 401 as per RFC 2617"));
+        nonceCount = null;
+        clientNonce = null;
       }
-    } catch (IOException io) {
-      return CompletableFuture.failedFuture(io);
+      final String hash1 =
+          calculateHash(userName, serverInfo.realm, passwordFilter.apply(workflow, task));
+      final String ha1 =
+          serverInfo.algorithm == Algorithm.MD5SESSS
+              ? calculateHash(hash1, serverInfo.nonce, clientNonce)
+              : hash1;
+      final String ha2 = calculateHash(method, path);
+      String response =
+          serverInfo
+              .qop
+              .map(
+                  qop ->
+                      calculateHash(
+                          ha1,
+                          serverInfo.nonce,
+                          nonceCount,
+                          clientNonce,
+                          qop.toString().toLowerCase(),
+                          ha2))
+              .orElseGet(() -> calculateHash(ha1, serverInfo.nonce, ha2));
+      return buildResponseInfo(serverInfo, userName, path, clientNonce, nonceCount, response);
+    } else {
+      throw new IllegalStateException(
+          "URI "
+              + uri
+              + " is not digest protected, it returned code "
+              + responseCode
+              + " when invoked without authentication header, but it should have returned 401 as per RFC 2617");
     }
   }
 

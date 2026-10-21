@@ -17,6 +17,7 @@ package org.openworkflow.sdk.impl.executors.openapi;
 
 import java.io.IOException;
 import java.io.UncheckedIOException;
+import java.net.URI;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -30,8 +31,10 @@ import org.openworkflow.sdk.impl.WorkflowApplication;
 import org.openworkflow.sdk.impl.WorkflowContext;
 import org.openworkflow.sdk.impl.WorkflowModel;
 import org.openworkflow.sdk.impl.executors.CallableTask;
-import org.openworkflow.sdk.impl.executors.http.HttpExecutor;
-import org.openworkflow.sdk.impl.executors.http.HttpExecutorBuilder;
+import org.openworkflow.sdk.impl.http.WorkflowHTTPRequestHelper;
+import org.openworkflow.sdk.impl.http.WorkflowHttpRequestInfo;
+import org.openworkflow.sdk.impl.http.WorkflowHttpRequestInfo.Builder;
+import org.openworkflow.sdk.impl.http.WorkflowHttpRequestInfoBuilderFactory;
 import org.openworkflow.sdk.impl.resources.ExternalResourceHandler;
 
 class OpenAPIExecutor implements CallableTask {
@@ -39,13 +42,13 @@ class OpenAPIExecutor implements CallableTask {
   private final OpenAPIProcessor processor;
   private final ExternalResource resource;
   private final Map<String, Object> parameters;
-  private final HttpExecutorBuilder builder;
+  private final WorkflowHttpRequestInfoBuilderFactory builder;
 
   OpenAPIExecutor(
       OpenAPIProcessor processor,
       ExternalResource resource,
       Map<String, Object> parameters,
-      HttpExecutorBuilder builder) {
+      WorkflowHttpRequestInfoBuilderFactory builder) {
     this.processor = processor;
     this.resource = resource;
     this.parameters = parameters;
@@ -78,21 +81,26 @@ class OpenAPIExecutor implements CallableTask {
               // but the path differs, although some use cases may require different client
               // configurations for
               // different paths...)
-              Collection<HttpExecutor> executors =
-                  operationDefinition.getServers().stream().map(builder::build).toList();
-
-              Iterator<HttpExecutor> iter = executors.iterator();
+              Builder httpInfoBuilder = builder.build(workflowContext, taskContext, input);
+              Collection<WorkflowHttpRequestInfo> executors =
+                  operationDefinition.getServers().stream()
+                      .map(uri -> httpInfoBuilder.build(URI.create(uri)))
+                      .toList();
+              Iterator<WorkflowHttpRequestInfo> iter = executors.iterator();
               if (!iter.hasNext()) {
                 throw new IllegalArgumentException(
                     "List of servers is empty for schema " + resource.getName());
               }
               CompletableFuture<WorkflowModel> future =
-                  iter.next().apply(workflowContext, taskContext, input);
+                  WorkflowHTTPRequestHelper.executeRequest(
+                      iter.next(), workflowContext, taskContext);
               while (iter.hasNext()) {
-                HttpExecutor item = iter.next();
+                WorkflowHttpRequestInfo item = iter.next();
                 future =
                     future.exceptionallyCompose(
-                        i -> item.apply(workflowContext, taskContext, input));
+                        i ->
+                            WorkflowHTTPRequestHelper.executeRequest(
+                                item, workflowContext, taskContext));
               }
               return future;
             });

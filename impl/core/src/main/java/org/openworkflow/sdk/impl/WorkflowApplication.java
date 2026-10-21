@@ -63,6 +63,10 @@ import org.openworkflow.sdk.impl.executors.TaskExecutorFactory;
 import org.openworkflow.sdk.impl.expressions.ExpressionFactory;
 import org.openworkflow.sdk.impl.expressions.RuntimeDescriptor;
 import org.openworkflow.sdk.impl.lifecycle.LifeCycleEventType;
+import org.openworkflow.sdk.impl.http.DefaultHttpRequestBuilderFactory;
+import org.openworkflow.sdk.impl.http.DefaultURITemplateResolver;
+import org.openworkflow.sdk.impl.http.URITemplateResolver;
+import org.openworkflow.sdk.impl.http.WorkflowHttpRequestFactory;
 import org.openworkflow.sdk.impl.lifecycle.WorkflowExecutionCompletableListener;
 import org.openworkflow.sdk.impl.lifecycle.WorkflowExecutionListener;
 import org.openworkflow.sdk.impl.lifecycle.WorkflowExecutionListenerAdapter;
@@ -71,7 +75,6 @@ import org.openworkflow.sdk.impl.lifecycle.ce.WorkflowLifeCycleCloudEventFactory
 import org.openworkflow.sdk.impl.resources.DefaultResourceLoaderFactory;
 import org.openworkflow.sdk.impl.resources.ExternalResourceHandler;
 import org.openworkflow.sdk.impl.resources.ResourceLoaderFactory;
-import org.openworkflow.sdk.impl.resources.URITemplateResolver;
 import org.openworkflow.sdk.impl.scheduler.AllStrategyCorrelationInfoFactory;
 import org.openworkflow.sdk.impl.scheduler.CronResolver;
 import org.openworkflow.sdk.impl.scheduler.CronResolverFactory;
@@ -80,8 +83,12 @@ import org.openworkflow.sdk.impl.scheduler.InMemoryAllStrategyCorrelationInfo;
 import org.openworkflow.sdk.impl.scheduler.WorkflowScheduler;
 import org.openworkflow.sdk.impl.schema.SchemaValidator;
 import org.openworkflow.sdk.impl.schema.SchemaValidatorFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class WorkflowApplication implements AutoCloseable {
+
+  private static final Logger logger = LoggerFactory.getLogger(WorkflowApplication.class);
 
   private final String id;
   private final TaskExecutorFactory taskFactory;
@@ -107,7 +114,7 @@ public class WorkflowApplication implements AutoCloseable {
   private final ConfigManager configManager;
   private final SecretManager secretManager;
   private final SchedulerListener schedulerListener;
-  private final Optional<URITemplateResolver> templateResolver;
+  private final URITemplateResolver templateResolver;
   private final Optional<FunctionReader> functionReader;
   private final URI defaultCatalogURI;
   private final WorkflowValueResolver<URI> defaultEventSource;
@@ -117,6 +124,7 @@ public class WorkflowApplication implements AutoCloseable {
   private final WorkflowLifeCycleCloudEventFactory lifeCycleCloudEventFactory;
   private final ScheduledExecutorService schedulerExecutorService;
   private final Set<String> allowedCommands;
+  private final WorkflowHttpRequestFactory httpRequestBuilderFactory;
   private final Map<Class<?>, ServiceLoader<?>> servicesLoaded = new ConcurrentHashMap<>();
   private final Set<LifeCycleEventType> lifeCycleEventTypes;
 
@@ -156,6 +164,7 @@ public class WorkflowApplication implements AutoCloseable {
     this.schedulerExecutorService = builder.schedulerExecutorService;
     this.allowedCommands = Collections.unmodifiableSet(builder.allowedCommands);
     this.lifeCycleEventTypes = builder.lifeCycleEventTypes;
+    this.httpRequestBuilderFactory = builder.httpRequestBuilderFactory;
   }
 
   public TaskExecutorFactory taskFactory() {
@@ -274,7 +283,7 @@ public class WorkflowApplication implements AutoCloseable {
     private SecretManager secretManager;
     private ConfigManager configManager;
     private SchedulerListener schedulerListener;
-    private Optional<URITemplateResolver> templateResolver;
+    private URITemplateResolver templateResolver;
     private Optional<FunctionReader> functionReader;
     private URI defaultCatalogURI;
     private WorkflowValueResolver<URI> defaultEventSource;
@@ -285,6 +294,7 @@ public class WorkflowApplication implements AutoCloseable {
     private ScheduledExecutorService schedulerExecutorService;
     private Set<String> allowedCommands = new HashSet<>();
     private Set<LifeCycleEventType> lifeCycleEventTypes;
+    private WorkflowHttpRequestFactory httpRequestBuilderFactory;
 
     private Builder() {
       ServiceLoader.load(NamedWorkflowAdditionalObject.class)
@@ -468,6 +478,12 @@ public class WorkflowApplication implements AutoCloseable {
       return this;
     }
 
+    public Builder withHttpRequestBuilderFactory(
+        WorkflowHttpRequestFactory httpRequestBuilderFactory) {
+      this.httpRequestBuilderFactory = httpRequestBuilderFactory;
+      return this;
+    }
+
     public WorkflowApplication build() {
       if (executorFactory == null) {
         executorFactory = new DefaultExecutorServiceFactory();
@@ -546,7 +562,8 @@ public class WorkflowApplication implements AutoCloseable {
         secretManager =
             loadFirst(SecretManager.class).orElseGet(() -> new ConfigSecretManager(configManager));
       }
-      templateResolver = loadFirst(URITemplateResolver.class);
+      templateResolver =
+          loadFirst(URITemplateResolver.class).orElseGet(() -> new DefaultURITemplateResolver());
       functionReader = loadFirst(FunctionReader.class);
       if (cloudEventPredicateFactory == null) {
         cloudEventPredicateFactory =
@@ -578,6 +595,12 @@ public class WorkflowApplication implements AutoCloseable {
       if (lifeCycleEventTypes == null) {
         lifeCycleEventTypes = EnumSet.of(LifeCycleEventType.V8);
       }
+      if (httpRequestBuilderFactory == null) {
+        httpRequestBuilderFactory =
+            loadFirst(WorkflowHttpRequestFactory.class)
+                .orElseGet(() -> new DefaultHttpRequestBuilderFactory());
+      }
+
       return new WorkflowApplication(this);
     }
 
@@ -668,7 +691,7 @@ public class WorkflowApplication implements AutoCloseable {
     return schedulerListener;
   }
 
-  public Optional<URITemplateResolver> templateResolver() {
+  public URITemplateResolver templateResolver() {
     return templateResolver;
   }
 
@@ -702,6 +725,25 @@ public class WorkflowApplication implements AutoCloseable {
         .map(v -> (T) v.apply(workflowContext, taskContext));
   }
 
+  public <T> Optional<T> additionalObject(
+      String name, Optional<WorkflowContext> workflowContext, Optional<TaskContext> taskContext) {
+    return Optional.ofNullable(additionalObjects.get(name))
+        .map(
+            v -> {
+              try {
+                return (T) v.apply(workflowContext.orElse(null), taskContext.orElse(null));
+              } catch (NullPointerException ex) {
+
+                // ignore null pointer exception that might be thrown in case
+                // workflowContex/taskContext are null
+                logger.warn(
+                    "Null pointer exception was thrown by additional object factory. please change the factory to add null check for workflow/task context",
+                    ex);
+                return null;
+              }
+            });
+  }
+
   public AuthProviderFactory authProviderFactory() {
     return authProviderFactory;
   }
@@ -724,6 +766,10 @@ public class WorkflowApplication implements AutoCloseable {
 
   public Set<LifeCycleEventType> lifeCycleEventTypes() {
     return lifeCycleEventTypes;
+  }
+
+  public WorkflowHttpRequestFactory httpRequestFactory() {
+    return httpRequestBuilderFactory;
   }
 
   @SuppressWarnings("unchecked")
