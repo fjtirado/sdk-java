@@ -18,7 +18,7 @@ package org.openworkflow.sdk.impl.auth;
 import java.util.List;
 import org.openworkflow.sdk.impl.ServicePriority;
 
-public interface AccessTokenProviderFactory extends ServicePriority {
+public interface AccessTokenProviderFactory extends ServicePriority<AccessTokenProviderFactory> {
 
   AccessTokenProvider build(
       HttpRequestInfo requestInfo, List<String> issuers, JWTConverter converter);
