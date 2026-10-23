@@ -137,6 +137,10 @@ try (OutputStream out = new FileOutputStream("simple.json")) {
 ```
 For additional writing helper methods, check [WorkflowWriter](api/src/main/java/org/openworkflow/sdk/api/WorkflowWriter.java) class.
 
+## Jackson dependency
+
+The `openworkflow-api` module depends heavily on Jackson for loading file content into an in-memory POJO. For users who use a JSON handling library other than Jackson, the `openworkflow-types` module contains Java POJOs generated from the OpenWorkflow schema without any Jackson annotations. Using this module as a dependency, they can build a reader/writer module equivalent to `openworkflow-api` with their preferred JSON library.
+
 ### Reference implementation
 
 The reference implementation provides a ready-to-use runtime that supports the Open Workflow Specification. It includes a workflow execution engine, validation utilities, and illustrative examples to help you quickly test and deploy your workflows. For details on usage, configuration, and supported features, see [readme](impl/README.md). 
