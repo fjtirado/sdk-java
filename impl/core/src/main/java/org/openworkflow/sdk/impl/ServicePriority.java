@@ -25,6 +25,6 @@ public interface ServicePriority extends Comparable<ServicePriority> {
 
   @Override
   default int compareTo(ServicePriority other) {
-    return this.priority() - other.priority();
+    return Integer.compare(this.priority(), other.priority());
   }
 }
