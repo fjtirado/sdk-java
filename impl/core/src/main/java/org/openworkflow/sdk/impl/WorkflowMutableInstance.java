@@ -51,13 +51,14 @@ public class WorkflowMutableInstance implements WorkflowInstance {
   protected final WorkflowContext workflowContext;
   protected Instant startedAt;
 
-  protected AtomicReference<CompletableFuture<WorkflowModel>> futureRef = new AtomicReference<>();
+  protected volatile CompletableFuture<WorkflowModel> future;
   protected Instant completedAt;
 
   protected Map<String, Object> additionalObjects = new ConcurrentHashMap<>();
 
   protected final Map<String, Integer> iterationsMap = new ConcurrentHashMap<>();
 
+  private final Lock startExecLock = new ReentrantLock();
   private Lock statusLock = new ReentrantLock();
   private Map<CompletableFuture<TaskContext>, TaskContext> suspended;
 
@@ -91,29 +92,44 @@ public class WorkflowMutableInstance implements WorkflowInstance {
 
   protected final CompletableFuture<WorkflowModel> startExecution(
       Supplier<CompletableFuture<?>> runnable) {
-    CompletableFuture<WorkflowModel> future = futureRef.get();
-    if (future == null) {
-      future =
-          runnable
-              .get()
-              .thenCompose(
-                  v ->
-                      TaskExecutorHelper.processTaskList(
-                              workflowContext.definition().startTask(),
-                              workflowContext,
-                              Optional.empty(),
-                              workflowContext
-                                  .definition()
-                                  .inputFilter()
-                                  .map(f -> f.apply(workflowContext, null, input))
-                                  .orElse(input))
-                          .whenComplete(this::setCompleteDate)
-                          .thenApply(this::filterAndValidate)
-                          .thenCompose(this::publishCompletionEvents)
-                          .exceptionallyCompose(this::handleException))
-              .handle(this::cleanUpWaitingListeners)
-              .thenCompose(Function.identity());
-      futureRef.set(future);
+    startExecLock.lock();
+    boolean isInitializer;
+    try {
+      isInitializer = future == null;
+      if (isInitializer) {
+        future = new CompletableFuture<>();
+      }
+    } finally {
+      startExecLock.unlock();
+    }
+    if (isInitializer) {
+      runnable
+          .get()
+          .thenCompose(
+              v ->
+                  TaskExecutorHelper.processTaskList(
+                          workflowContext.definition().startTask(),
+                          workflowContext,
+                          Optional.empty(),
+                          workflowContext
+                              .definition()
+                              .inputFilter()
+                              .map(f -> f.apply(workflowContext, null, input))
+                              .orElse(input))
+                      .whenComplete(this::setCompleteDate)
+                      .thenApply(this::filterAndValidate)
+                      .thenCompose(this::publishCompletionEvents)
+                      .exceptionallyCompose(this::handleException))
+          .handle(this::cleanUpWaitingListeners)
+          .thenCompose(Function.identity())
+          .whenComplete(
+              (result, ex) -> {
+                if (ex != null) {
+                  future.completeExceptionally(ex);
+                } else {
+                  future.complete(result);
+                }
+              });
     }
     return future;
   }
@@ -217,7 +233,6 @@ public class WorkflowMutableInstance implements WorkflowInstance {
 
   @Override
   public WorkflowModel output() {
-    CompletableFuture<WorkflowModel> future = futureRef.get();
     return future != null ? future.join() : null;
   }
 
