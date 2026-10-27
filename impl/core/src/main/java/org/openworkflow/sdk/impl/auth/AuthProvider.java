@@ -26,5 +26,5 @@ public interface AuthProvider {
   String scheme();
 
   CompletableFuture<String> content(
-      Optional<WorkflowContext> workflow, Optional<TaskContext> task, URI uri);
+      Optional<WorkflowContext> workflow, Optional<TaskContext> task, URI uri, String method);
 }

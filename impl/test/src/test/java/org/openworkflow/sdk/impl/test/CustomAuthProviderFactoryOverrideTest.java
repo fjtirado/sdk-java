@@ -79,16 +79,12 @@ public class CustomAuthProviderFactoryOverrideTest {
           public Optional<AuthProvider> getAuth(
               WorkflowDefinition definition, EndpointConfiguration configuration) {
             return getAuth(
-                definition,
-                configuration == null ? null : configuration.getAuthentication(),
-                "GET");
+                definition, configuration == null ? null : configuration.getAuthentication());
           }
 
           @Override
           public Optional<AuthProvider> getAuth(
-              WorkflowDefinition definition,
-              ReferenceableAuthenticationPolicy auth,
-              String method) {
+              WorkflowDefinition definition, ReferenceableAuthenticationPolicy auth) {
             factoryInvocations.incrementAndGet();
             return Optional.of(
                 new AuthProvider() {
@@ -99,7 +95,10 @@ public class CustomAuthProviderFactoryOverrideTest {
 
                   @Override
                   public CompletableFuture<String> content(
-                      Optional<WorkflowContext> workflow, Optional<TaskContext> task, URI uri) {
+                      Optional<WorkflowContext> workflow,
+                      Optional<TaskContext> task,
+                      URI uri,
+                      String method) {
                     return CompletableFuture.completedFuture(frameworkToken);
                   }
                 });

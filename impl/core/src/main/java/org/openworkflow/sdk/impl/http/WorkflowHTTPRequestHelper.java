@@ -16,7 +16,6 @@
 package org.openworkflow.sdk.impl.http;
 
 import java.net.SocketTimeoutException;
-import java.net.URI;
 import java.net.http.HttpTimeoutException;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
@@ -97,18 +96,18 @@ public class WorkflowHTTPRequestHelper {
       Optional<TaskContext> task) {
     return requestInfo
         .auth()
-        .map(auth -> addAuthHeader(auth, requestInfo.uri(), headerFiller, workflow, task))
+        .map(auth -> addAuthHeader(auth, requestInfo, headerFiller, workflow, task))
         .orElseGet(() -> CompletableFuture.completedFuture(null));
   }
 
   private static CompletableFuture<?> addAuthHeader(
       AuthProvider auth,
-      URI uri,
+      WorkflowHttpRequestInfo info,
       BiConsumer<String, String> headerFiller,
       Optional<WorkflowContext> workflow,
       Optional<TaskContext> task) {
     String scheme = auth.scheme();
-    return auth.content(workflow, task, uri)
+    return auth.content(workflow, task, info.uri(), info.method())
         .thenAccept(
             parameter -> {
               task.ifPresent(t -> t.authorization(scheme, parameter));

@@ -114,15 +114,11 @@ class DigestAuthProvider implements AuthProvider {
   private static final String HEX = "%08x";
   private final WorkflowValueResolver<String> userFilter;
   private final WorkflowValueResolver<String> passwordFilter;
-  private final String method;
   private final WorkflowApplication app;
   private final Random random = RandomFactory.getRandom();
 
   public DigestAuthProvider(
-      WorkflowApplication app,
-      Workflow workflow,
-      DigestAuthenticationPolicy authPolicy,
-      String method) {
+      WorkflowApplication app, Workflow workflow, DigestAuthenticationPolicy authPolicy) {
     this.app = app;
     DigestAuthenticationProperties properties =
         authPolicy.getDigest().getDigestAuthenticationProperties();
@@ -138,7 +134,6 @@ class DigestAuthProvider implements AuthProvider {
       throw new IllegalStateException(
           "Both secret and properties are null for digest authorization");
     }
-    this.method = method;
   }
 
   @Override
@@ -148,14 +143,14 @@ class DigestAuthProvider implements AuthProvider {
 
   @Override
   public CompletableFuture<String> content(
-      Optional<WorkflowContext> workflow, Optional<TaskContext> task, URI uri) {
+      Optional<WorkflowContext> workflow, Optional<TaskContext> task, URI uri, String method) {
     return app.httpRequestFactory()
         .request(app, WorkflowHttpRequestInfo.builder(method).build(uri))
         .invoke(workflow, task)
         .thenApply(
             r -> {
               try {
-                return processResponse(r, uri, workflow, task);
+                return processResponse(r, uri, method, workflow, task);
               } finally {
                 r.close();
               }
@@ -165,6 +160,7 @@ class DigestAuthProvider implements AuthProvider {
   private String processResponse(
       WorkflowHttpResponse r,
       URI uri,
+      String method,
       Optional<WorkflowContext> workflow,
       Optional<TaskContext> task) {
     int responseCode = r.status();

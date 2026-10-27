@@ -37,7 +37,6 @@ public class WorkflowHttpRequestInfoBuilderFactory {
   private WorkflowValueResolver<URI> pathSupplier;
   private WorkflowFilter bodyFilter;
   private String method = "GET";
-  private ReferenceableAuthenticationPolicy policy;
   private Optional<AuthProvider> auth;
   private boolean redirect;
   private WorkflowValueResolver<Map<String, Object>> headers;
@@ -65,7 +64,7 @@ public class WorkflowHttpRequestInfoBuilderFactory {
                   name));
         }
       }
-      this.policy = policy;
+      auth = definition.application().authProviderFactory().getAuth(definition, policy);
     }
     return this;
   }
@@ -107,11 +106,7 @@ public class WorkflowHttpRequestInfoBuilderFactory {
 
   public WorkflowHttpRequestInfoBuilderFactory withMethod(String method) {
     if (method != null) {
-      String normalizedMethod = method.toUpperCase();
-      if (!this.method.equals(normalizedMethod)) {
-        this.auth = null;
-      }
-      this.method = normalizedMethod;
+      this.method = method.toUpperCase();
     }
     return this;
   }
@@ -124,9 +119,6 @@ public class WorkflowHttpRequestInfoBuilderFactory {
   public WorkflowHttpRequestInfo.Builder build(
       WorkflowContext workflow, TaskContext taskContext, WorkflowModel input) {
     Builder builder = WorkflowHttpRequestInfo.builder(method).redirect(redirect);
-    if (policy != null && auth == null) {
-      auth = definition.application().authProviderFactory().getAuth(definition, policy, method);
-    }
     if (auth != null) {
       builder.auth(auth);
     }

@@ -41,7 +41,7 @@ public abstract class CommonOAuthProvider implements AuthProvider {
 
   @Override
   public CompletableFuture<String> content(
-      Optional<WorkflowContext> workflow, Optional<TaskContext> task, URI uri) {
+      Optional<WorkflowContext> workflow, Optional<TaskContext> task, URI uri, String method) {
     return tokenProvider.apply(workflow, task).validateAndGet(workflow, task).thenApply(JWT::token);
   }
 

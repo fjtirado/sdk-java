@@ -51,7 +51,7 @@ class BearerAuthProvider implements AuthProvider {
 
   @Override
   public CompletableFuture<String> content(
-      Optional<WorkflowContext> workflow, Optional<TaskContext> task, URI uri) {
+      Optional<WorkflowContext> workflow, Optional<TaskContext> task, URI uri, String method) {
     return CompletableFuture.completedFuture(tokenFilter.apply(workflow, task));
   }
 
