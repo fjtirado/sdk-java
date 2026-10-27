@@ -19,11 +19,5 @@ import java.util.function.BiFunction;
 import org.openworkflow.sdk.impl.TaskContextData;
 import org.openworkflow.sdk.impl.WorkflowContextData;
 
-/**
- * Adds additional object to workflow application
- *
- * <p>Note that both WorkflowContextData or TaskContexData might be null. Implementors should null
- * check them and act accordingly
- */
 public interface WorkflowAdditionalObject<T>
     extends BiFunction<WorkflowContextData, TaskContextData, T> {}

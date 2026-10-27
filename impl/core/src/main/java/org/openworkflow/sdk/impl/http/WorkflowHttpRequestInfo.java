@@ -19,6 +19,7 @@ import java.net.URI;
 import java.time.Instant;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
@@ -100,23 +101,28 @@ public record WorkflowHttpRequestInfo(
           path == null ? uri : WorkflowUtils.concatURI(uri, path),
           method,
           redirect,
-          removeNullValues(headers),
-          removeNullValues(queryParams),
+          headers != null
+              ? headers.entrySet().stream()
+                  .filter(e -> e.getValue() != null)
+                  .collect(Collectors.toMap(Entry::getKey, Entry::getValue))
+              : Map.of(),
+          queryParams != null
+              ? queryParams.entrySet().stream()
+                  .collect(
+                      Collectors.toMap(
+                          Entry::getKey, e -> e.getValue() == null ? "" : e.getValue()))
+              : Map.of(),
           body,
           auth,
           ifModifiedSince != null
               ? Instant.ofEpochMilli(ifModifiedSince)
                   .atZone(ZoneOffset.UTC)
-                  .format(DateTimeFormatter.RFC_1123_DATE_TIME)
+                  .format(
+                      DateTimeFormatter.ofPattern(
+                          "EEE, dd MMM uuuu HH:mm:ss 'GMT'",
+                          Locale.US)) // RFC_1123 skips the 0 in single
+              // digit days
               : null);
-    }
-
-    private static Map<String, Object> removeNullValues(Map<String, Object> map) {
-      return map != null
-          ? map.entrySet().stream()
-              .collect(
-                  Collectors.toMap(Entry::getKey, e -> e.getValue() == null ? "" : e.getValue()))
-          : Map.of();
     }
   }
 }

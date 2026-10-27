@@ -44,6 +44,7 @@ import org.openworkflow.sdk.impl.WorkflowApplication;
 import org.openworkflow.sdk.impl.WorkflowDefinition;
 import org.openworkflow.sdk.impl.WorkflowException;
 import org.openworkflow.sdk.impl.http.DefaultHttpRequestBuilderFactory;
+import org.openworkflow.sdk.impl.http.DefaultURITemplateResolver;
 
 public class OpenAPITest {
 
@@ -114,6 +115,7 @@ public class OpenAPITest {
     defaultApp =
         WorkflowApplication.builder()
             .withHttpRequestBuilderFactory(new DefaultHttpRequestBuilderFactory())
+            .withURITemplateResolver(new DefaultURITemplateResolver())
             .build();
     jakartaApp = WorkflowApplication.builder().build();
   }

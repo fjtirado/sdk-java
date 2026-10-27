@@ -45,6 +45,7 @@ import org.openworkflow.sdk.impl.WorkflowModel;
 import org.openworkflow.sdk.impl.executors.CallableTask;
 import org.openworkflow.sdk.impl.executors.CallableTaskProxyBuilder;
 import org.openworkflow.sdk.impl.http.DefaultHttpRequestBuilderFactory;
+import org.openworkflow.sdk.impl.http.DefaultURITemplateResolver;
 import org.openworkflow.sdk.types.Errors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -79,6 +80,7 @@ public class HTTPWorkflowDefinitionTest {
     defaultApp =
         WorkflowApplication.builder()
             .withHttpRequestBuilderFactory(new DefaultHttpRequestBuilderFactory())
+            .withURITemplateResolver(new DefaultURITemplateResolver())
             .withCallableProxy(new TimeCallableTaskProxyBuilder())
             .build();
 

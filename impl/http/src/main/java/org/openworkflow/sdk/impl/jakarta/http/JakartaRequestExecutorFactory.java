@@ -17,6 +17,10 @@ package org.openworkflow.sdk.impl.jakarta.http;
 
 import jakarta.ws.rs.client.Client;
 import jakarta.ws.rs.client.ClientBuilder;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
 import org.openworkflow.sdk.impl.WorkflowApplication;
 import org.openworkflow.sdk.impl.http.WorkflowHttpRequest;
 import org.openworkflow.sdk.impl.http.WorkflowHttpRequestFactory;
@@ -24,15 +28,27 @@ import org.openworkflow.sdk.impl.http.WorkflowHttpRequestInfo;
 
 public class JakartaRequestExecutorFactory implements WorkflowHttpRequestFactory {
 
+  private static final String HTTP_REQUEST_DECORATOR_KEY = "HttpRequestDecorators";
+
   private Client client = ClientBuilder.newClient();
+  private List<HttpRequestDecorator> requestDecorators;
 
   public Client client() {
     return client;
   }
 
   @Override
+  public void init(WorkflowApplication app) {
+    requestDecorators = new ArrayList<>(app.serviceLoadedClasses(HttpRequestDecorator.class));
+    requestDecorators.addAll(
+        app.<Collection<HttpRequestDecorator>>additionalObject(HTTP_REQUEST_DECORATOR_KEY)
+            .orElse(List.of()));
+    Collections.sort(requestDecorators);
+  }
+
+  @Override
   public WorkflowHttpRequest request(WorkflowApplication app, WorkflowHttpRequestInfo httpInfo) {
-    return new JakartaRequestExecutor(app, client, httpInfo);
+    return new JakartaRequestExecutor(app, client, httpInfo, requestDecorators);
   }
 
   @Override

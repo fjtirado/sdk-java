@@ -31,8 +31,8 @@ public interface WorkflowDecorator<T> extends ServicePriority {
    * Decorates an object with information extracted from the workflow and task context
    *
    * @param decorated
-   * @param workflowContext wont be null
-   * @param taskContext might be null
+   * @param workflowContext
+   * @param taskContext
    */
   void decorate(T decorated, WorkflowContext workflowContext, TaskContext taskContext);
 }

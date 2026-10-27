@@ -20,9 +20,7 @@ import jakarta.ws.rs.WebApplicationException;
 import jakarta.ws.rs.client.Client;
 import jakarta.ws.rs.client.Invocation.Builder;
 import jakarta.ws.rs.client.WebTarget;
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -41,18 +39,22 @@ import org.openworkflow.sdk.impl.http.WorkflowHttpResponse;
 
 class JakartaRequestExecutor implements WorkflowHttpRequest {
 
-  private static final String HTTP_REQUEST_DECORATOR_KEY = "HttpRequestDecorators";
   private final ExecutorService executorService;
   private final WorkflowHttpRequestInfo requestInfo;
   private final WorkflowApplication application;
   private final Client defaultClient;
+  private final Collection<HttpRequestDecorator> requestDecorators;
 
   public JakartaRequestExecutor(
-      WorkflowApplication application, Client defaultClient, WorkflowHttpRequestInfo requestInfo) {
+      WorkflowApplication application,
+      Client defaultClient,
+      WorkflowHttpRequestInfo requestInfo,
+      List<HttpRequestDecorator> requestDecorators) {
     this.application = application;
     this.defaultClient = defaultClient;
     this.executorService = application.executorService();
     this.requestInfo = requestInfo;
+    this.requestDecorators = requestDecorators;
   }
 
   @Override
@@ -74,19 +76,10 @@ class JakartaRequestExecutor implements WorkflowHttpRequest {
       request.header(WorkflowHTTPRequestHelper.IF_MODIFIED_SINCE_HEADER, ifModifiedSince);
     }
     requestInfo.headers().forEach(request::header);
-
     if (workflowContext.isPresent()) {
-      List<HttpRequestDecorator> requestDecorators =
-          new ArrayList<>(application.serviceLoadedClasses(HttpRequestDecorator.class));
-      requestDecorators.addAll(
-          application
-              .<Collection<HttpRequestDecorator>>additionalObject(HTTP_REQUEST_DECORATOR_KEY)
-              .orElse(List.of()));
-      Collections.sort(requestDecorators);
       requestDecorators.forEach(
           d -> d.decorate(request, workflowContext.orElseThrow(), taskContext.orElse(null)));
     }
-
     return WorkflowHTTPRequestHelper.processAuth(
             requestInfo, (k, v) -> request.header(k, v), workflowContext, taskContext)
         .thenApplyAsync(

@@ -18,13 +18,17 @@ package org.openworkflow.sdk.impl.http;
 import java.net.http.HttpResponse;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.Optional;
 import java.util.OptionalLong;
 import org.openworkflow.sdk.impl.WorkflowApplication;
 import org.openworkflow.sdk.impl.WorkflowModel;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class DefaultHttpResponse implements WorkflowHttpResponse {
 
+  private static final Logger logger = LoggerFactory.getLogger(DefaultHttpResponse.class);
   private final WorkflowApplication application;
   private final HttpResponse<byte[]> response;
 
@@ -54,7 +58,6 @@ public class DefaultHttpResponse implements WorkflowHttpResponse {
         .headers()
         .firstValue("Last-Modified")
         .map(DefaultHttpResponse::fromGMTString)
-        .map(OptionalLong::of)
         .orElseGet(OptionalLong::empty);
   }
 
@@ -74,9 +77,15 @@ public class DefaultHttpResponse implements WorkflowHttpResponse {
     return "DefaultHttpResponse [response=" + response + "]";
   }
 
-  private static long fromGMTString(String str) {
-    return ZonedDateTime.parse(str, DateTimeFormatter.RFC_1123_DATE_TIME)
-        .toInstant()
-        .toEpochMilli();
+  private static OptionalLong fromGMTString(String str) {
+    try {
+      return OptionalLong.of(
+          ZonedDateTime.parse(str, DateTimeFormatter.RFC_1123_DATE_TIME)
+              .toInstant()
+              .toEpochMilli());
+    } catch (DateTimeParseException ex) {
+      logger.warn("Invalid date returned in Last-Modified header", ex);
+      return OptionalLong.empty();
+    }
   }
 }

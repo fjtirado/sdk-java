@@ -18,7 +18,6 @@ package org.openworkflow.sdk.impl.executors.openapi;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.net.URI;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -32,7 +31,6 @@ import org.openworkflow.sdk.impl.WorkflowContext;
 import org.openworkflow.sdk.impl.WorkflowModel;
 import org.openworkflow.sdk.impl.executors.CallableTask;
 import org.openworkflow.sdk.impl.http.WorkflowHTTPRequestHelper;
-import org.openworkflow.sdk.impl.http.WorkflowHttpRequestInfo;
 import org.openworkflow.sdk.impl.http.WorkflowHttpRequestInfo.Builder;
 import org.openworkflow.sdk.impl.http.WorkflowHttpRequestInfoBuilderFactory;
 import org.openworkflow.sdk.impl.resources.ExternalResourceHandler;
@@ -76,25 +74,24 @@ class OpenAPIExecutor implements CallableTask {
             operationDefinition -> {
               fillHttpBuilder(workflowContext.definition().application(), operationDefinition);
               Builder httpInfoBuilder = builder.build(workflowContext, taskContext, input);
-              Collection<WorkflowHttpRequestInfo> executors =
-                  operationDefinition.getServers().stream()
-                      .map(uri -> httpInfoBuilder.build(URI.create(uri)))
-                      .toList();
-              Iterator<WorkflowHttpRequestInfo> iter = executors.iterator();
+              Iterator<String> iter = operationDefinition.getServers().iterator();
+
               if (!iter.hasNext()) {
                 throw new IllegalArgumentException(
                     "List of servers is empty for schema " + resource.getName());
               }
               CompletableFuture<WorkflowModel> future =
                   WorkflowHTTPRequestHelper.executeRequest(
-                      iter.next(), workflowContext, taskContext);
+                      httpInfoBuilder.build(URI.create(iter.next())), workflowContext, taskContext);
               while (iter.hasNext()) {
-                WorkflowHttpRequestInfo item = iter.next();
+                final String uri = iter.next();
                 future =
                     future.exceptionallyCompose(
                         i ->
                             WorkflowHTTPRequestHelper.executeRequest(
-                                item, workflowContext, taskContext));
+                                httpInfoBuilder.build(URI.create(uri)),
+                                workflowContext,
+                                taskContext));
               }
               return future;
             });

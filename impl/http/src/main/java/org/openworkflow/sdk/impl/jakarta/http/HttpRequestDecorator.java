@@ -18,5 +18,8 @@ package org.openworkflow.sdk.impl.jakarta.http;
 import jakarta.ws.rs.client.Invocation;
 import org.openworkflow.sdk.impl.WorkflowDecorator;
 
-/** Interface for decorating HTTP requests with additional modifications. */
+/**
+ * Interface for decorating HTTP requests with additional modifications. Note that TaskContext might
+ * be null
+ */
 public interface HttpRequestDecorator extends WorkflowDecorator<Invocation.Builder> {}

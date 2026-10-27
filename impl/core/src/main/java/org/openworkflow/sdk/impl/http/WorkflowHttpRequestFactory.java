@@ -19,7 +19,10 @@ import org.openworkflow.sdk.impl.ServicePriority;
 import org.openworkflow.sdk.impl.WorkflowApplication;
 
 public interface WorkflowHttpRequestFactory extends ServicePriority, AutoCloseable {
+
   WorkflowHttpRequest request(WorkflowApplication app, WorkflowHttpRequestInfo httpInfo);
+
+  default void init(WorkflowApplication app) {}
 
   default void close() {}
 }

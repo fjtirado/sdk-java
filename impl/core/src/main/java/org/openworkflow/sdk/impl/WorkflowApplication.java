@@ -43,6 +43,7 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import org.openworkflow.sdk.api.types.SchemaInline;
 import org.openworkflow.sdk.api.types.Workflow;
+import org.openworkflow.sdk.impl.additional.NamedSuppliedAdditionalObject;
 import org.openworkflow.sdk.impl.additional.NamedWorkflowAdditionalObject;
 import org.openworkflow.sdk.impl.additional.WorkflowAdditionalObject;
 import org.openworkflow.sdk.impl.auth.AuthProviderFactory;
@@ -83,12 +84,8 @@ import org.openworkflow.sdk.impl.scheduler.InMemoryAllStrategyCorrelationInfo;
 import org.openworkflow.sdk.impl.scheduler.WorkflowScheduler;
 import org.openworkflow.sdk.impl.schema.SchemaValidator;
 import org.openworkflow.sdk.impl.schema.SchemaValidatorFactory;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class WorkflowApplication implements AutoCloseable {
-
-  private static final Logger logger = LoggerFactory.getLogger(WorkflowApplication.class);
 
   private final String id;
   private final TaskExecutorFactory taskFactory;
@@ -299,6 +296,8 @@ public class WorkflowApplication implements AutoCloseable {
     private Builder() {
       ServiceLoader.load(NamedWorkflowAdditionalObject.class)
           .forEach(a -> additionalObjects.put(a.name(), a));
+      ServiceLoader.load(NamedSuppliedAdditionalObject.class)
+          .forEach(a -> this.additionalObjectSuppliers.put(a.name(), a));
     }
 
     public Builder withId(String id) {
@@ -484,6 +483,11 @@ public class WorkflowApplication implements AutoCloseable {
       return this;
     }
 
+    public Builder withURITemplateResolver(URITemplateResolver templateResolver) {
+      this.templateResolver = templateResolver;
+      return this;
+    }
+
     public WorkflowApplication build() {
       if (executorFactory == null) {
         executorFactory = new DefaultExecutorServiceFactory();
@@ -562,8 +566,10 @@ public class WorkflowApplication implements AutoCloseable {
         secretManager =
             loadFirst(SecretManager.class).orElseGet(() -> new ConfigSecretManager(configManager));
       }
-      templateResolver =
-          loadFirst(URITemplateResolver.class).orElseGet(() -> new DefaultURITemplateResolver());
+      if (templateResolver == null) {
+        templateResolver =
+            loadFirst(URITemplateResolver.class).orElseGet(() -> new DefaultURITemplateResolver());
+      }
       functionReader = loadFirst(FunctionReader.class);
       if (cloudEventPredicateFactory == null) {
         cloudEventPredicateFactory =
@@ -600,8 +606,9 @@ public class WorkflowApplication implements AutoCloseable {
             loadFirst(WorkflowHttpRequestFactory.class)
                 .orElseGet(() -> new DefaultHttpRequestBuilderFactory());
       }
-
-      return new WorkflowApplication(this);
+      WorkflowApplication app = new WorkflowApplication(this);
+      httpRequestBuilderFactory.init(app);
+      return app;
     }
 
     private <T> List<T> loadFromServiceLoader(Class<T> clazz) {
@@ -728,22 +735,11 @@ public class WorkflowApplication implements AutoCloseable {
 
   public <T> Optional<T> additionalObject(
       String name, Optional<WorkflowContext> workflowContext, Optional<TaskContext> taskContext) {
-    return Optional.ofNullable(additionalObjects.get(name))
-        .map(
-            v -> {
-              try {
-                return (T) v.apply(workflowContext.orElse(null), taskContext.orElse(null));
-              } catch (NullPointerException ex) {
-                if (workflowContext.isPresent() && taskContext.isPresent()) {
-                  throw ex;
-                } else {
-                  logger.warn(
-                      "Null pointer exception was thrown by additional object factory. please change the factory to add null check for workflow/task context",
-                      ex);
-                }
-                return null;
-              }
-            });
+    return workflowContext.isEmpty() && taskContext.isEmpty()
+        ? additionalObject(name)
+        : (Optional<T>)
+            additionalObject(name, workflowContext.orElseThrow(), taskContext.orElseThrow())
+                .or(() -> additionalObject(name));
   }
 
   public AuthProviderFactory authProviderFactory() {
