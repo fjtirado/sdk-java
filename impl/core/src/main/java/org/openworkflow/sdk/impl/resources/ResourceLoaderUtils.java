@@ -18,13 +18,28 @@ package org.openworkflow.sdk.impl.resources;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UncheckedIOException;
+import java.util.Optional;
+import org.openworkflow.sdk.impl.TaskContext;
+import org.openworkflow.sdk.impl.WorkflowContext;
 
 public class ResourceLoaderUtils {
 
   private ResourceLoaderUtils() {}
 
   public static String readString(ExternalResourceHandler handler) {
-    try (InputStream in = handler.open()) {
+    return readString(handler, Optional.empty(), Optional.empty());
+  }
+
+  public static String readString(
+      ExternalResourceHandler handler, WorkflowContext workflow, TaskContext task) {
+    return readString(handler, Optional.of(workflow), Optional.of(task));
+  }
+
+  public static String readString(
+      ExternalResourceHandler handler,
+      Optional<WorkflowContext> workflow,
+      Optional<TaskContext> task) {
+    try (InputStream in = handler.open(workflow, task)) {
       return new String(in.readAllBytes());
     } catch (IOException io) {
       throw new UncheckedIOException(io);

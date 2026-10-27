@@ -37,15 +37,18 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.openworkflow.sdk.api.types.Workflow;
 import org.openworkflow.sdk.impl.WorkflowApplication;
 import org.openworkflow.sdk.impl.WorkflowDefinition;
 import org.openworkflow.sdk.impl.WorkflowException;
+import org.openworkflow.sdk.impl.http.DefaultHttpRequestBuilderFactory;
 
 public class OpenAPITest {
 
-  private static WorkflowApplication app;
+  private static WorkflowApplication defaultApp;
+  private static WorkflowApplication jakartaApp;
   private static byte[] yaml;
   private static String dateBefore;
 
@@ -108,12 +111,17 @@ public class OpenAPITest {
     try (InputStream is = OpenAPITest.class.getResourceAsStream("/schema/openapi/openapi.yaml")) {
       yaml = is.readAllBytes();
     }
-    app = WorkflowApplication.builder().build();
+    defaultApp =
+        WorkflowApplication.builder()
+            .withHttpRequestBuilderFactory(new DefaultHttpRequestBuilderFactory())
+            .build();
+    jakartaApp = WorkflowApplication.builder().build();
   }
 
   @AfterAll
   static void cleanup() {
-    app.close();
+    defaultApp.close();
+    jakartaApp.close();
   }
 
   @BeforeEach
@@ -138,8 +146,13 @@ public class OpenAPITest {
     restServer.shutdown();
   }
 
-  @Test
-  public void testOpenAPIBearerQueryInlinedBodyWithPositiveResponse()
+  private static List<WorkflowApplication> applications() {
+    return List.of(defaultApp, jakartaApp);
+  }
+
+  @ParameterizedTest(autoCloseArguments = false)
+  @MethodSource("applications")
+  public void testOpenAPIBearerQueryInlinedBodyWithPositiveResponse(WorkflowApplication app)
       throws InterruptedException, IOException {
     Workflow workflow =
         readWorkflowFromClasspath("workflows-samples/openapi/project-post-positive.yaml");
@@ -183,8 +196,9 @@ public class OpenAPITest {
     assertEquals(67890, members.get(1));
   }
 
-  @Test
-  public void testOpenAPIBearerQueryInlinedBodyWithNegativeResponse()
+  @ParameterizedTest(autoCloseArguments = false)
+  @MethodSource("applications")
+  public void testOpenAPIBearerQueryInlinedBodyWithNegativeResponse(WorkflowApplication app)
       throws IOException, InterruptedException {
     Workflow workflow =
         readWorkflowFromClasspath("workflows-samples/openapi/project-post-positive.yaml");
@@ -220,8 +234,10 @@ public class OpenAPITest {
         .isEqualTo("Bearer eyJhbnNpc2l0b3IuYm9sdXMubWFnbnVz");
   }
 
-  @Test
-  public void testOpenAPIGetWithPositiveResponse() throws InterruptedException, IOException {
+  @ParameterizedTest(autoCloseArguments = false)
+  @MethodSource("applications")
+  public void testOpenAPIGetWithPositiveResponse(WorkflowApplication app)
+      throws InterruptedException, IOException {
 
     Workflow workflow =
         readWorkflowFromClasspath("workflows-samples/openapi/get-user-get-request.yaml");
@@ -263,20 +279,9 @@ public class OpenAPITest {
     assertEquals("HEAD", openAPIRequest.getMethod());
   }
 
-  private void assertData(Map<String, Object> result) throws InterruptedException {
-    RecordedRequest restRequest = restServer.takeRequest();
-    assertEquals("GET", restRequest.getMethod());
-    assertTrue(restRequest.getPath().startsWith("/api/v1/users/40099?"));
-
-    assertTrue(result.containsKey("data"));
-    Map<String, Object> data = (Map<String, Object>) result.get("data");
-    assertEquals(40099, data.get("id"));
-    assertEquals("Severus Calix", data.get("name"));
-    assertEquals("severus.calix@hive-terra.example.com", data.get("email"));
-  }
-
-  @Test
-  public void testOpenAPIGetWithPositiveResponseAndVars() throws Exception {
+  @ParameterizedTest(autoCloseArguments = false)
+  @MethodSource("applications")
+  public void testOpenAPIGetWithPositiveResponseAndVars(WorkflowApplication app) throws Exception {
     Workflow workflow =
         readWorkflowFromClasspath("workflows-samples/openapi/get-user-get-request-vars.yaml");
 
@@ -324,5 +329,17 @@ public class OpenAPITest {
     assertThat(data.get("id")).isEqualTo(40099);
     assertThat(data.get("name")).isEqualTo("Severus Calix");
     assertThat(data.get("email")).isEqualTo("severus.calix@hive-terra.example.com");
+  }
+
+  private void assertData(Map<String, Object> result) throws InterruptedException {
+    RecordedRequest restRequest = restServer.takeRequest();
+    assertEquals("GET", restRequest.getMethod());
+    assertTrue(restRequest.getPath().startsWith("/api/v1/users/40099?"));
+
+    assertTrue(result.containsKey("data"));
+    Map<String, Object> data = (Map<String, Object>) result.get("data");
+    assertEquals(40099, data.get("id"));
+    assertEquals("Severus Calix", data.get("name"));
+    assertEquals("severus.calix@hive-terra.example.com", data.get("email"));
   }
 }

@@ -16,14 +16,20 @@
 package org.openworkflow.sdk.impl.http;
 
 import java.net.http.HttpClient;
+import java.net.http.HttpClient.Redirect;
 import org.openworkflow.sdk.impl.WorkflowApplication;
 
 public class DefaultHttpRequestBuilderFactory implements WorkflowHttpRequestFactory {
 
-  private HttpClient client = HttpClient.newHttpClient();
+  private HttpClient client = HttpClient.newBuilder().followRedirects(Redirect.NORMAL).build();
 
   @Override
   public WorkflowHttpRequest request(WorkflowApplication app, WorkflowHttpRequestInfo httpInfo) {
     return new DefaultHttpRequest(app, client, httpInfo);
+  }
+
+  @Override
+  public void close() {
+    client.close();
   }
 }

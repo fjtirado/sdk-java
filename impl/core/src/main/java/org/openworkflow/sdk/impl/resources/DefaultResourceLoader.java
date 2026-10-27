@@ -54,7 +54,7 @@ public class DefaultResourceLoader extends ResourceLoader {
       Optional<AuthProvider> auth,
       Optional<WorkflowContext> workflowContext,
       Optional<TaskContext> taskContext) {
-    return new HttpResource(this.application, uri, auth, workflowContext, taskContext);
+    return new HttpResource(this.application, uri, auth);
   }
 
   protected URI handleURI(URI uri) {
@@ -94,7 +94,7 @@ public class DefaultResourceLoader extends ResourceLoader {
             .compute(
                 resourceHandler,
                 (k, v) ->
-                    v == null || k.shouldReload(v.lastReload())
+                    v == null || k.shouldReload(v.lastReload(), workflowContext, taskContext)
                         ? new CachedResource(Instant.now(), function.apply(k))
                         : v)
             .content();

@@ -15,22 +15,15 @@
  */
 package org.openworkflow.sdk.impl.additional;
 
+import java.util.function.BiFunction;
 import org.openworkflow.sdk.impl.TaskContextData;
 import org.openworkflow.sdk.impl.WorkflowContextData;
 
 /**
- * Factory to create additional object by downstream users
+ * Adds additional object to workflow application
  *
- * @param <T>
+ * <p>Note that both WorkflowContextData or TaskContexData might be null. Implementors should null
+ * check them and act accordingly
  */
-public interface WorkflowAdditionalObject<T> {
-
-  /**
-   * Returns an object
-   *
-   * @param workflow might be null
-   * @param task might be null
-   * @return
-   */
-  T apply(WorkflowContextData workflow, TaskContextData task);
-}
+public interface WorkflowAdditionalObject<T>
+    extends BiFunction<WorkflowContextData, TaskContextData, T> {}

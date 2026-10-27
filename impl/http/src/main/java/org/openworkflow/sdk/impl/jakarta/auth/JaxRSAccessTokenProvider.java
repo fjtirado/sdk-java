@@ -43,19 +43,23 @@ import org.openworkflow.sdk.impl.auth.JWT;
 import org.openworkflow.sdk.impl.auth.JWTConverter;
 import org.openworkflow.sdk.impl.jakarta.http.HttpClientResolver;
 
+// TODO this class should be refactor to be included in the core and use WorkflowHttpRequest
 class JaxRSAccessTokenProvider implements AccessTokenProvider {
 
   private final WorkflowApplication app;
+  private final Client defaultClient;
   private final List<String> issuers;
   private final AuthHttpRequestInfo requestInfo;
   private final JWTConverter jwtConverter;
 
   JaxRSAccessTokenProvider(
       WorkflowApplication app,
+      Client client,
       AuthHttpRequestInfo requestInfo,
       List<String> issuers,
       JWTConverter converter) {
     this.app = app;
+    this.defaultClient = client;
     this.requestInfo = requestInfo;
     this.issuers = issuers;
     this.jwtConverter = converter;
@@ -112,8 +116,9 @@ class JaxRSAccessTokenProvider implements AccessTokenProvider {
   }
 
   private Response executeRequest(Optional<WorkflowContext> workflow, Optional<TaskContext> task) {
-
-    Client client = HttpClientResolver.client(app, workflow, task);
+    Client client =
+        app.<Client>additionalObject(HttpClientResolver.HTTP_CLIENT_PROVIDER, workflow, task)
+            .orElse(defaultClient);
     WebTarget target = client.target(requestInfo.uri().apply(workflow, task));
     Invocation.Builder builder = commonHeaders(target, workflow, task);
     builder.header("grant_type", requestInfo.grantType());

@@ -17,6 +17,7 @@ package org.openworkflow.sdk.impl.jakarta.http;
 
 import jakarta.ws.rs.ProcessingException;
 import jakarta.ws.rs.WebApplicationException;
+import jakarta.ws.rs.client.Client;
 import jakarta.ws.rs.client.Invocation.Builder;
 import jakarta.ws.rs.client.WebTarget;
 import java.util.ArrayList;
@@ -44,10 +45,12 @@ class JakartaRequestExecutor implements WorkflowHttpRequest {
   private final ExecutorService executorService;
   private final WorkflowHttpRequestInfo requestInfo;
   private final WorkflowApplication application;
+  private final Client defaultClient;
 
   public JakartaRequestExecutor(
-      WorkflowApplication application, WorkflowHttpRequestInfo requestInfo) {
+      WorkflowApplication application, Client defaultClient, WorkflowHttpRequestInfo requestInfo) {
     this.application = application;
+    this.defaultClient = defaultClient;
     this.executorService = application.executorService();
     this.requestInfo = requestInfo;
   }
@@ -55,23 +58,22 @@ class JakartaRequestExecutor implements WorkflowHttpRequest {
   @Override
   public CompletableFuture<WorkflowHttpResponse> invoke(
       Optional<WorkflowContext> workflowContext, Optional<TaskContext> taskContext) {
-
     WebTarget target =
-        HttpClientResolver.client(application, workflowContext, taskContext)
+        application
+            .<Client>additionalObject(
+                HttpClientResolver.HTTP_CLIENT_PROVIDER, workflowContext, taskContext)
+            .orElse(defaultClient)
             .target(requestInfo.uri());
     Map<String, Object> queryParams = requestInfo.queryParams();
-    if (queryParams != null) {
-      for (Entry<String, Object> entry : queryParams.entrySet()) {
-        target = target.queryParam(entry.getKey(), entry.getValue());
-      }
+    for (Entry<String, Object> entry : queryParams.entrySet()) {
+      target = target.queryParam(entry.getKey(), entry.getValue());
     }
     Builder request = target.request();
-    Long ifModifiedSince = requestInfo.ifModifiedSince();
+    String ifModifiedSince = requestInfo.ifModifiedSince();
     if (ifModifiedSince != null) {
       request.header(WorkflowHTTPRequestHelper.IF_MODIFIED_SINCE_HEADER, ifModifiedSince);
     }
-    Map<String, Object> headers = requestInfo.headers();
-    if (headers != null) headers.forEach(request::header);
+    requestInfo.headers().forEach(request::header);
 
     if (workflowContext.isPresent()) {
       List<HttpRequestDecorator> requestDecorators =
@@ -105,6 +107,7 @@ class JakartaRequestExecutor implements WorkflowHttpRequest {
     try {
       return new JakartaHttpResponse(
           application,
+          task,
           converter,
           requestInfo.body() == null || requestInfo.body().isNull()
               ? request.method(requestInfo.method())

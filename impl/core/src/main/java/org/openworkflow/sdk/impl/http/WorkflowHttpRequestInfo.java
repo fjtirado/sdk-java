@@ -16,9 +16,14 @@
 package org.openworkflow.sdk.impl.http;
 
 import java.net.URI;
+import java.time.Instant;
+import java.time.ZoneOffset;
+import java.time.format.DateTimeFormatter;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.stream.Collectors;
 import org.openworkflow.sdk.impl.WorkflowModel;
 import org.openworkflow.sdk.impl.WorkflowUtils;
 import org.openworkflow.sdk.impl.auth.AuthProvider;
@@ -31,7 +36,7 @@ public record WorkflowHttpRequestInfo(
     Map<String, Object> queryParams,
     WorkflowModel body,
     Optional<AuthProvider> auth,
-    Long ifModifiedSince) {
+    String ifModifiedSince) {
 
   public static Builder builder(String method) {
     return new Builder(method);
@@ -95,11 +100,23 @@ public record WorkflowHttpRequestInfo(
           path == null ? uri : WorkflowUtils.concatURI(uri, path),
           method,
           redirect,
-          headers,
-          queryParams,
+          removeNullValues(headers),
+          removeNullValues(queryParams),
           body,
           auth,
-          ifModifiedSince);
+          ifModifiedSince != null
+              ? Instant.ofEpochMilli(ifModifiedSince)
+                  .atZone(ZoneOffset.UTC)
+                  .format(DateTimeFormatter.RFC_1123_DATE_TIME)
+              : null);
+    }
+
+    private static Map<String, Object> removeNullValues(Map<String, Object> map) {
+      return map != null
+          ? map.entrySet().stream()
+              .collect(
+                  Collectors.toMap(Entry::getKey, e -> e.getValue() == null ? "" : e.getValue()))
+          : Map.of();
     }
   }
 }

@@ -15,13 +15,17 @@
  */
 package org.openworkflow.sdk.impl.jakarta.http;
 
+import jakarta.ws.rs.ProcessingException;
 import jakarta.ws.rs.core.Response;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 import java.util.OptionalLong;
+import java.util.stream.Collectors;
+import org.openworkflow.sdk.impl.TaskContext;
 import org.openworkflow.sdk.impl.WorkflowApplication;
 import org.openworkflow.sdk.impl.WorkflowModel;
+import org.openworkflow.sdk.impl.http.WorkflowHTTPRequestHelper;
 import org.openworkflow.sdk.impl.http.WorkflowHttpResponse;
 
 public class JakartaHttpResponse implements WorkflowHttpResponse {
@@ -29,12 +33,17 @@ public class JakartaHttpResponse implements WorkflowHttpResponse {
   private final WorkflowApplication app;
   private HttpModelConverter converter;
   private Response response;
+  private Optional<TaskContext> taskContext;
 
   public JakartaHttpResponse(
-      WorkflowApplication app, HttpModelConverter converter, Response response) {
+      WorkflowApplication app,
+      Optional<TaskContext> taskContext,
+      HttpModelConverter converter,
+      Response response) {
     this.app = app;
     this.converter = converter;
     this.response = response;
+    this.taskContext = taskContext;
   }
 
   @Override
@@ -48,9 +57,9 @@ public class JakartaHttpResponse implements WorkflowHttpResponse {
   }
 
   private Object fromListToSingleObject(List<Object> list) {
-    return list.size() == 1
-        ? list.get(0)
-        : String.join(",", list.stream().map(Object::toString).toList());
+    return list == null
+        ? null
+        : list.stream().map(Object::toString).collect(Collectors.joining(","));
   }
 
   @Override
@@ -76,12 +85,20 @@ public class JakartaHttpResponse implements WorkflowHttpResponse {
 
   @Override
   public String errorDetails() {
-    return response.readEntity(String.class);
+    try {
+      return response.readEntity(String.class);
+    } catch (ProcessingException ex) {
+      return ex.getMessage();
+    }
   }
 
   @Override
   public Optional<WorkflowModel> asWorkflowModel() {
-    return Optional.of(app.modelFactory().fromAny(response.readEntity(converter.responseType())));
+    try {
+      return Optional.of(app.modelFactory().fromAny(response.readEntity(converter.responseType())));
+    } catch (ProcessingException ex) {
+      throw WorkflowHTTPRequestHelper.fromError(ex, taskContext);
+    }
   }
 
   @Override

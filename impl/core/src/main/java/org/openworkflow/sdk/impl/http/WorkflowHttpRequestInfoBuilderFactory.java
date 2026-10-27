@@ -40,7 +40,7 @@ public class WorkflowHttpRequestInfoBuilderFactory {
   private ReferenceableAuthenticationPolicy policy;
   private Optional<AuthProvider> auth;
   private boolean redirect;
-  private WorkflowValueResolver<Map<String, Object>> headersMap;
+  private WorkflowValueResolver<Map<String, Object>> headers;
   private WorkflowValueResolver<Map<String, Object>> queryMap;
 
   public static WorkflowHttpRequestInfoBuilderFactory builder(WorkflowDefinition definition) {
@@ -71,9 +71,8 @@ public class WorkflowHttpRequestInfoBuilderFactory {
   }
 
   public WorkflowHttpRequestInfoBuilderFactory withBody(Object body) {
-    if (!(body == null || body instanceof Map map && map.isEmpty())) {
-      this.bodyFilter = WorkflowUtils.buildWorkflowFilter(definition.application(), body);
-    }
+    this.bodyFilter =
+        body == null ? null : WorkflowUtils.buildWorkflowFilter(definition.application(), body);
     return this;
   }
 
@@ -82,17 +81,21 @@ public class WorkflowHttpRequestInfoBuilderFactory {
     return this;
   }
 
-  public WorkflowHttpRequestInfoBuilderFactory withHeaders(Map<String, Object> headersMap) {
-    return withHeaders(WorkflowUtils.buildMapResolver(definition.application(), headersMap));
+  public WorkflowHttpRequestInfoBuilderFactory withHeaders(Map<String, Object> headers) {
+    return withHeaders(
+        headers == null ? null : WorkflowUtils.buildMapResolver(definition.application(), headers));
   }
 
   public WorkflowHttpRequestInfoBuilderFactory withQueryMap(Map<String, Object> queryMap) {
-    return withQueryMap(WorkflowUtils.buildMapResolver(definition.application(), queryMap));
+    return withQueryMap(
+        queryMap == null
+            ? null
+            : WorkflowUtils.buildMapResolver(definition.application(), queryMap));
   }
 
   public WorkflowHttpRequestInfoBuilderFactory withHeaders(
-      WorkflowValueResolver<Map<String, Object>> headersMap) {
-    this.headersMap = headersMap;
+      WorkflowValueResolver<Map<String, Object>> headers) {
+    this.headers = headers;
     return this;
   }
 
@@ -104,7 +107,11 @@ public class WorkflowHttpRequestInfoBuilderFactory {
 
   public WorkflowHttpRequestInfoBuilderFactory withMethod(String method) {
     if (method != null) {
-      this.method = method.toUpperCase();
+      String normalizedMethod = method.toUpperCase();
+      if (!this.method.equals(normalizedMethod)) {
+        this.auth = null;
+      }
+      this.method = normalizedMethod;
     }
     return this;
   }
@@ -126,8 +133,8 @@ public class WorkflowHttpRequestInfoBuilderFactory {
     if (queryMap != null) {
       builder.queryParams(queryMap.apply(workflow, taskContext, input));
     }
-    if (headersMap != null) {
-      builder.headers(headersMap.apply(workflow, taskContext, input));
+    if (headers != null) {
+      builder.headers(headers.apply(workflow, taskContext, input));
     }
     if (bodyFilter != null) {
       builder.body(bodyFilter.apply(workflow, taskContext, input));

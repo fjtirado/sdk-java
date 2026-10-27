@@ -399,7 +399,10 @@ public class DefaultURITemplateResolver implements URITemplateResolver {
           sb.append(Character.toChars(stringValue.codePointAt(i++)));
           toAppend = URLEncoder.encode(sb.toString(), StandardCharsets.UTF_8.name());
         } else if (replaceReserved || isUcschar(character) || isIprivate(character)) {
-          toAppend = URLEncoder.encode(toAppend, StandardCharsets.UTF_8.name());
+          toAppend =
+              URLEncoder.encode(toAppend, StandardCharsets.UTF_8.name())
+                  .replace("*", "%2A")
+                  .replace("%7E", "~");
         }
       } catch (UnsupportedEncodingException e) {
         throw new RuntimeException(e);
@@ -496,12 +499,7 @@ public class DefaultURITemplateResolver implements URITemplateResolver {
   }
 
   private static boolean isNativeType(Object value) {
-    if (value instanceof String
-        || value instanceof Boolean
-        || value instanceof Integer
-        || value instanceof Long
-        || value instanceof Float
-        || value instanceof Double) {
+    if (value instanceof String || value instanceof Boolean || value instanceof Number) {
       return true;
     }
     return false;
@@ -510,11 +508,7 @@ public class DefaultURITemplateResolver implements URITemplateResolver {
   private static String convertNativeTypes(Object value) {
     if (value instanceof String) {
       return (String) value;
-    } else if (value instanceof Boolean
-        || value instanceof Integer
-        || value instanceof Long
-        || value instanceof Float
-        || value instanceof Double) {
+    } else if (value instanceof Boolean || value instanceof Number) {
       return value.toString();
     }
     throw new IllegalArgumentException(

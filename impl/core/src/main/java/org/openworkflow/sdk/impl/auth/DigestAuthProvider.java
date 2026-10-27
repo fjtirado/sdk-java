@@ -152,7 +152,14 @@ class DigestAuthProvider implements AuthProvider {
     return app.httpRequestFactory()
         .request(app, WorkflowHttpRequestInfo.builder(method).build(uri))
         .invoke(workflow, task)
-        .thenApply(r -> processResponse(r, uri, workflow, task));
+        .thenApply(
+            r -> {
+              try {
+                return processResponse(r, uri, workflow, task);
+              } finally {
+                r.close();
+              }
+            });
   }
 
   private String processResponse(
@@ -181,7 +188,12 @@ class DigestAuthProvider implements AuthProvider {
               ? calculateHash(hash1, serverInfo.nonce, clientNonce)
               : hash1;
       final String ha2 = calculateHash(method, path);
-      String response =
+      return buildResponseInfo(
+          serverInfo,
+          userName,
+          path,
+          clientNonce,
+          nonceCount,
           serverInfo
               .qop
               .map(
@@ -193,8 +205,7 @@ class DigestAuthProvider implements AuthProvider {
                           clientNonce,
                           qop.toString().toLowerCase(),
                           ha2))
-              .orElseGet(() -> calculateHash(ha1, serverInfo.nonce, ha2));
-      return buildResponseInfo(serverInfo, userName, path, clientNonce, nonceCount, response);
+              .orElseGet(() -> calculateHash(ha1, serverInfo.nonce, ha2)));
     } else {
       throw new IllegalStateException(
           "URI "

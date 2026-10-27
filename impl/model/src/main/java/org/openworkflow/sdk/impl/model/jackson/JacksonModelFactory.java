@@ -115,7 +115,9 @@ public class JacksonModelFactory implements WorkflowModelFactory {
 
   @Override
   public Optional<WorkflowModel> fromJson(byte[] value) {
-    return Optional.of(new JacksonModel(JsonUtils.mapper().readTree(value)));
+    return value == null || value.length == 0
+        ? Optional.of(fromNull())
+        : Optional.of(new JacksonModel(JsonUtils.mapper().readTree(value)));
   }
 
   @Override

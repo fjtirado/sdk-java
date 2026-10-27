@@ -16,6 +16,8 @@
 package org.openworkflow.sdk.impl.http;
 
 import java.net.http.HttpResponse;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Optional;
 import java.util.OptionalLong;
 import org.openworkflow.sdk.impl.WorkflowApplication;
@@ -48,12 +50,18 @@ public class DefaultHttpResponse implements WorkflowHttpResponse {
 
   @Override
   public OptionalLong lastModified() {
-    return response.headers().firstValueAsLong("Last-Modified");
+    return response
+        .headers()
+        .firstValue("Last-Modified")
+        .map(DefaultHttpResponse::fromGMTString)
+        .map(OptionalLong::of)
+        .orElseGet(OptionalLong::empty);
   }
 
   @Override
   public String errorDetails() {
-    return new String(response.body());
+    byte[] body = response.body();
+    return body != null ? new String(response.body()) : "No error information";
   }
 
   @Override
@@ -64,5 +72,11 @@ public class DefaultHttpResponse implements WorkflowHttpResponse {
   @Override
   public String toString() {
     return "DefaultHttpResponse [response=" + response + "]";
+  }
+
+  private static long fromGMTString(String str) {
+    return ZonedDateTime.parse(str, DateTimeFormatter.RFC_1123_DATE_TIME)
+        .toInstant()
+        .toEpochMilli();
   }
 }

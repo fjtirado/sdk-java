@@ -15,6 +15,8 @@
  */
 package org.openworkflow.sdk.impl.jakarta.http;
 
+import jakarta.ws.rs.client.Client;
+import jakarta.ws.rs.client.ClientBuilder;
 import org.openworkflow.sdk.impl.WorkflowApplication;
 import org.openworkflow.sdk.impl.http.WorkflowHttpRequest;
 import org.openworkflow.sdk.impl.http.WorkflowHttpRequestFactory;
@@ -22,8 +24,19 @@ import org.openworkflow.sdk.impl.http.WorkflowHttpRequestInfo;
 
 public class JakartaRequestExecutorFactory implements WorkflowHttpRequestFactory {
 
+  private Client client = ClientBuilder.newClient();
+
+  public Client client() {
+    return client;
+  }
+
   @Override
   public WorkflowHttpRequest request(WorkflowApplication app, WorkflowHttpRequestInfo httpInfo) {
-    return new JakartaRequestExecutor(app, httpInfo);
+    return new JakartaRequestExecutor(app, client, httpInfo);
+  }
+
+  @Override
+  public void close() {
+    client.close();
   }
 }

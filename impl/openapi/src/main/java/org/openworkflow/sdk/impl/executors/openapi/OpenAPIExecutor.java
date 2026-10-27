@@ -75,12 +75,6 @@ class OpenAPIExecutor implements CallableTask {
         .thenCompose(
             operationDefinition -> {
               fillHttpBuilder(workflowContext.definition().application(), operationDefinition);
-              // One executor per operation, even if the document is the same
-              // Me may refactor this even further to reuse the same executor (since the base URI is
-              // the same,
-              // but the path differs, although some use cases may require different client
-              // configurations for
-              // different paths...)
               Builder httpInfoBuilder = builder.build(workflowContext, taskContext, input);
               Collection<WorkflowHttpRequestInfo> executors =
                   operationDefinition.getServers().stream()
@@ -107,16 +101,16 @@ class OpenAPIExecutor implements CallableTask {
   }
 
   private void fillHttpBuilder(WorkflowApplication application, OperationDefinition operation) {
-    Map<String, Object> headersMap = new HashMap<>();
+    Map<String, Object> headers = new HashMap<>();
     Map<String, Object> queryMap = new HashMap<>();
     Map<String, Object> pathParameters = new HashMap<>();
     Set<String> missingParams = new HashSet<>();
-
+    boolean hasBody = operation.getOperation().hasRequestBody();
     Map<String, Object> bodyParameters = new HashMap<>(parameters);
     for (ParameterDefinition parameter : operation.getParameters()) {
       switch (parameter.in()) {
         case "header":
-          param(parameter, bodyParameters, headersMap, missingParams);
+          param(parameter, bodyParameters, headers, missingParams);
           break;
         case "path":
           param(parameter, bodyParameters, pathParameters, missingParams);
@@ -124,9 +118,11 @@ class OpenAPIExecutor implements CallableTask {
         case "query":
           param(parameter, bodyParameters, queryMap, missingParams);
           break;
+        case "body":
+          hasBody = true;
+          break;
       }
     }
-
     if (!missingParams.isEmpty()) {
       throw new IllegalArgumentException(
           "Missing required OpenAPI parameters for operation '"
@@ -136,11 +132,11 @@ class OpenAPIExecutor implements CallableTask {
               + missingParams);
     }
     builder
+        .withBody(hasBody || !bodyParameters.isEmpty() ? bodyParameters : null)
+        .withQueryMap(!queryMap.isEmpty() ? queryMap : null)
+        .withHeaders(!headers.isEmpty() ? headers : null)
         .withMethod(operation.getMethod())
-        .withPath(new OperationPathResolver(operation.getPath(), application, pathParameters))
-        .withBody(bodyParameters)
-        .withQueryMap(queryMap)
-        .withHeaders(headersMap);
+        .withPath(new OperationPathResolver(operation.getPath(), application, pathParameters));
   }
 
   private void param(
@@ -152,7 +148,6 @@ class OpenAPIExecutor implements CallableTask {
     if (origMap.containsKey(name)) {
       collectorMap.put(parameter.name(), origMap.remove(name));
     } else if (parameter.required()) {
-
       UnifiedOpenAPI.Schema schema = parameter.schema();
       Object defaultValue = schema != null ? schema._default() : null;
       if (defaultValue != null) {

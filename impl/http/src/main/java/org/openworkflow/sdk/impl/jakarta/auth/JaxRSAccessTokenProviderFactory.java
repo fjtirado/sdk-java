@@ -15,14 +15,39 @@
  */
 package org.openworkflow.sdk.impl.jakarta.auth;
 
+import jakarta.ws.rs.client.Client;
+import jakarta.ws.rs.client.ClientBuilder;
 import java.util.List;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 import org.openworkflow.sdk.impl.WorkflowApplication;
 import org.openworkflow.sdk.impl.auth.AccessTokenProvider;
 import org.openworkflow.sdk.impl.auth.AccessTokenProviderFactory;
 import org.openworkflow.sdk.impl.auth.AuthHttpRequestInfo;
 import org.openworkflow.sdk.impl.auth.JWTConverter;
+import org.openworkflow.sdk.impl.jakarta.http.JakartaRequestExecutorFactory;
 
 public class JaxRSAccessTokenProviderFactory implements AccessTokenProviderFactory {
+
+  private static class DefaultHolder {
+
+    private static final Lock clientLock = new ReentrantLock();
+    private static volatile Client client;
+
+    private static final Client client() {
+      if (client == null) {
+        clientLock.lock();
+        try {
+          if (client == null) {
+            client = ClientBuilder.newClient();
+          }
+        } finally {
+          clientLock.unlock();
+        }
+      }
+      return client;
+    }
+  }
 
   @Override
   public AccessTokenProvider build(
@@ -30,6 +55,13 @@ public class JaxRSAccessTokenProviderFactory implements AccessTokenProviderFacto
       AuthHttpRequestInfo requestInfo,
       List<String> issuers,
       JWTConverter converter) {
-    return new JaxRSAccessTokenProvider(app, requestInfo, issuers, converter);
+    return new JaxRSAccessTokenProvider(
+        app,
+        app.httpRequestFactory() instanceof JakartaRequestExecutorFactory factory
+            ? factory.client()
+            : DefaultHolder.client(),
+        requestInfo,
+        issuers,
+        converter);
   }
 }

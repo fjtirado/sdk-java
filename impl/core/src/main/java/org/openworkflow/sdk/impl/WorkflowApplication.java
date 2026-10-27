@@ -640,6 +640,7 @@ public class WorkflowApplication implements AutoCloseable {
       }
       listenersByPriority.clear();
     }
+    safeClose(httpRequestBuilderFactory);
   }
 
   public WorkflowPositionFactory positionFactory() {
@@ -733,12 +734,13 @@ public class WorkflowApplication implements AutoCloseable {
               try {
                 return (T) v.apply(workflowContext.orElse(null), taskContext.orElse(null));
               } catch (NullPointerException ex) {
-
-                // ignore null pointer exception that might be thrown in case
-                // workflowContex/taskContext are null
-                logger.warn(
-                    "Null pointer exception was thrown by additional object factory. please change the factory to add null check for workflow/task context",
-                    ex);
+                if (workflowContext.isPresent() && taskContext.isPresent()) {
+                  throw ex;
+                } else {
+                  logger.warn(
+                      "Null pointer exception was thrown by additional object factory. please change the factory to add null check for workflow/task context",
+                      ex);
+                }
                 return null;
               }
             });

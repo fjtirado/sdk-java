@@ -155,7 +155,7 @@ The reference implementation provides a ready-to-use runtime that supports the O
 This project contains source code copied and modified from the following third-party project:
 
 * **Name:** std-uritemplate
-* **Source:** [std-uritemplate GitHub Repository](https://github.com)
+* **Source:** [std-uritemplate GitHub Repository](https://github.com/std-uritemplate/std-uritemplate)
 * **File Copied:** `java/src/main/java/io/github/stduritemplate/StdUriTemplate.java`
 * **License:** Apache License 2.0
 * **Copyright:** Copyright 2024-2026 std-uritemplate contributors

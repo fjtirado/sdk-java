@@ -36,27 +36,19 @@ public class HttpResource implements ExternalResourceHandler {
 
   private final URI url;
   private final Optional<AuthProvider> auth;
-  private final Optional<WorkflowContext> workflowContext;
-  private final Optional<TaskContext> taskContext;
   private final WorkflowApplication application;
   private volatile String name;
 
-  public HttpResource(
-      WorkflowApplication application,
-      URI url,
-      Optional<AuthProvider> auth,
-      Optional<WorkflowContext> workflowContext,
-      Optional<TaskContext> taskContext) {
+  public HttpResource(WorkflowApplication application, URI url, Optional<AuthProvider> auth) {
     this.application = application;
-
     this.url = url;
     this.auth = auth;
-    this.workflowContext = workflowContext;
-    this.taskContext = taskContext;
   }
 
   @Override
-  public InputStream open() throws IOException {
+  public InputStream open(
+      Optional<WorkflowContext> workflowContext, Optional<TaskContext> taskContext)
+      throws IOException {
     WorkflowHttpRequestInfo.Builder info = WorkflowHttpRequestInfo.builder("GET").auth(auth);
     try (WorkflowHttpResponse response =
         application
@@ -64,6 +56,16 @@ public class HttpResource implements ExternalResourceHandler {
             .request(application, info.build(url))
             .invoke(workflowContext, taskContext)
             .join()) {
+      int status = response.status();
+      if (status < 200 || status >= 300) {
+        throw new IOException(
+            "Failed to download resource "
+                + url
+                + ": HTTP "
+                + status
+                + " "
+                + response.reasonPhrase());
+      }
       return new ByteArrayInputStream(response.asByteArray());
     }
   }
@@ -80,10 +82,13 @@ public class HttpResource implements ExternalResourceHandler {
   }
 
   @Override
-  public boolean shouldReload(Instant lastUpdate) {
+  public boolean shouldReload(
+      Instant lastUpdate,
+      Optional<WorkflowContext> workflowContext,
+      Optional<TaskContext> taskContext) {
     long millis = lastUpdate.toEpochMilli();
     WorkflowHttpRequestInfo.Builder info =
-        WorkflowHttpRequestInfo.builder("HEAD").ifModifiedSince(millis).redirect(true).auth(auth);
+        WorkflowHttpRequestInfo.builder("HEAD").ifModifiedSince(millis).auth(auth);
     try (WorkflowHttpResponse response =
         application
             .httpRequestFactory()

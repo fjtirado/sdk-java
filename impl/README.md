@@ -91,10 +91,10 @@ This SDK is modular by design—pull in only what you need:
   * **openworkflow-impl-validation** Schema validation implementation
   * **openworkflow-impl-lifecycle-events** Enable publication of lifecycle events as Json cloud events. 
   * **openworkflow-impl-function** Jackson Function support. 
-  * **openworkflow-impl-json** Jakcson common utilities shared by all modules in this list
+  * **openworkflow-impl-json** Jackson common utilities shared by all modules in this list
   * **openworkflow-impl-cron** Cron parsing for workflow scheduled execution
 
-  Aditionally, The OpenWokflow specification defines a set of [call task](https://github.com/open-workflow-specification/specification/blob/main/dsl-reference.md#call), which requires additional dependencies, with the exception of HTTP (see section below). You might add those ones needed depending on the feature you are using in your definition: 
+  Additionally, The OpenWokflow specification defines a set of [call task](https://github.com/open-workflow-specification/specification/blob/main/dsl-reference.md#call), which requires additional dependencies, with the exception of HTTP (see section below). You might add those ones needed depending on the feature you are using in your definition: 
 
   * **openworkflow-impl-openapi** OpenAPI support using Jackson
   * **openworkflow-impl-openapi-base** Base OpenAPI support intended to be extended for a specific JSON library

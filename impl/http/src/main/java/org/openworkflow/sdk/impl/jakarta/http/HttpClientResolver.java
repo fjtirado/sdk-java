@@ -15,46 +15,7 @@
  */
 package org.openworkflow.sdk.impl.jakarta.http;
 
-import jakarta.ws.rs.client.Client;
-import jakarta.ws.rs.client.ClientBuilder;
-import java.util.Optional;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
-import org.openworkflow.sdk.impl.TaskContext;
-import org.openworkflow.sdk.impl.WorkflowApplication;
-import org.openworkflow.sdk.impl.WorkflowContext;
-
 public class HttpClientResolver {
 
   public static final String HTTP_CLIENT_PROVIDER = "httpClientProvider";
-
-  private static class DefaultHolder {
-
-    private static final Lock clientLock = new ReentrantLock();
-    private static volatile Client client;
-
-    private static final Client client() {
-      if (client == null) {
-        clientLock.lock();
-        try {
-          if (client == null) {
-            client = ClientBuilder.newClient();
-          }
-        } finally {
-          clientLock.unlock();
-        }
-      }
-      return client;
-    }
-  }
-
-  public static Client client(
-      WorkflowApplication appl,
-      Optional<WorkflowContext> workflowContext,
-      Optional<TaskContext> taskContext) {
-    return appl.<Client>additionalObject(HTTP_CLIENT_PROVIDER, workflowContext, taskContext)
-        .orElseGet(() -> DefaultHolder.client());
-  }
-
-  private HttpClientResolver() {}
 }
