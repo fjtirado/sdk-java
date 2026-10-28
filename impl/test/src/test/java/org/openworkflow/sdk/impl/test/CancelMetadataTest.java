@@ -91,6 +91,21 @@ class CancelMetadataTest {
     cancelGate.reset();
   }
 
+  @Test
+  void testCancelFuture() throws IOException {
+    WorkflowDefinition definition =
+        appl.workflowDefinition(
+            WorkflowReader.readWorkflowFromClasspath(
+                "workflows-samples/listen-to-any-filter.yaml"));
+    WorkflowInstance instance = definition.instance(Map.of("threshold", 38));
+    CompletableFuture<WorkflowModel> future = instance.start();
+    assertThat(future.isCancelled()).isFalse();
+    assertThat(instance.status()).isEqualTo(WorkflowStatus.WAITING);
+    future.cancel(true);
+    assertThat(future.isCancelled()).isTrue();
+    assertThat(instance.status()).isEqualTo(WorkflowStatus.CANCELLED);
+  }
+
   @ParameterizedTest(name = "{0} / {1}")
   @MethodSource("cancelParameters")
   void metadataIsAvailableWhenCancelledEventIsPublished(

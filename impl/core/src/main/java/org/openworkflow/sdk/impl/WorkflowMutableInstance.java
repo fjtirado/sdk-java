@@ -97,7 +97,15 @@ public class WorkflowMutableInstance implements WorkflowInstance {
     try {
       isInitializer = future == null;
       if (isInitializer) {
-        future = new CompletableFuture<>();
+        future =
+            new CompletableFuture<>() {
+              @Override
+              public boolean cancel(boolean mayInterruptIfRunning) {
+                boolean result = super.cancel(mayInterruptIfRunning);
+                WorkflowMutableInstance.this.cancel();
+                return result;
+              }
+            };
       }
     } finally {
       startExecLock.unlock();
@@ -435,12 +443,16 @@ public class WorkflowMutableInstance implements WorkflowInstance {
     return internalCancel();
   }
 
+  private boolean isCancelable(WorkflowStatus status) {
+    return TaskExecutorHelper.isActive(status) || status == WorkflowStatus.PENDING;
+  }
+
   private CompletableFuture<Boolean> internalCancel() {
     WorkflowStatus prevState;
     Collection<CompletableFuture<?>> toCancel = null;
     try {
       statusLock.lock();
-      if (TaskExecutorHelper.isActive(status.get())) {
+      if (isCancelable(status.get())) {
         toCancel = new ArrayList<>(cancelables);
         cancelables.clear();
         prevState = status.getAndSet(WorkflowStatus.CANCELLED);
