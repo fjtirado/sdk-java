@@ -97,7 +97,16 @@ public class WorkflowMutableInstance implements WorkflowInstance {
     try {
       isInitializer = future == null;
       if (isInitializer) {
-        future = new CompletableFuture<>();
+        future =
+            new CompletableFuture<>() {
+              @Override
+              public boolean cancel(boolean mayInterruptIfRunning) {
+                if (!isDone() && WorkflowMutableInstance.this.cancel()) {
+                  super.cancel(mayInterruptIfRunning);
+                }
+                return isCancelled();
+              }
+            };
       }
     } finally {
       startExecLock.unlock();
@@ -125,7 +134,8 @@ public class WorkflowMutableInstance implements WorkflowInstance {
           .whenComplete(
               (result, ex) -> {
                 if (ex != null) {
-                  future.completeExceptionally(ex);
+                  future.completeExceptionally(
+                      ex instanceof CompletionException ? ex.getCause() : ex);
                 } else {
                   future.complete(result);
                 }
