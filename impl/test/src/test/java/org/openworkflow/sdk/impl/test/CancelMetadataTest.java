@@ -26,7 +26,6 @@ import java.util.Set;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
@@ -154,7 +153,7 @@ class CancelMetadataTest {
 
     assertThat(future)
         .failsWithin(Duration.ofSeconds(5))
-        .withThrowableOfType(ExecutionException.class);
+        .withThrowableOfType(CancellationException.class);
     assertThat(instance.status()).isEqualTo(WorkflowStatus.CANCELLED);
     assertMetadataSeenOnCancel(instance);
   }
@@ -196,7 +195,7 @@ class CancelMetadataTest {
 
     assertThat(future)
         .failsWithin(Duration.ofSeconds(5))
-        .withThrowableOfType(ExecutionException.class);
+        .withThrowableOfType(CancellationException.class);
     assertThat(instance.status()).isEqualTo(WorkflowStatus.CANCELLED);
     assertMetadataSeenOnCancel(instance);
   }
@@ -228,8 +227,7 @@ class CancelMetadataTest {
 
     assertThat(future)
         .failsWithin(Duration.ofSeconds(5))
-        .withThrowableOfType(ExecutionException.class)
-        .withCauseInstanceOf(CancellationException.class);
+        .withThrowableOfType(CancellationException.class);
     assertThat(instance.status()).isEqualTo(WorkflowStatus.CANCELLED);
     assertThat(listener.workflowCompletedSeen(instance.id()))
         .as("onWorkflowCompleted published for a cancelled instance")
