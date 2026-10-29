@@ -63,11 +63,11 @@ import org.openworkflow.sdk.impl.executors.DefaultTaskExecutorFactory;
 import org.openworkflow.sdk.impl.executors.TaskExecutorFactory;
 import org.openworkflow.sdk.impl.expressions.ExpressionFactory;
 import org.openworkflow.sdk.impl.expressions.RuntimeDescriptor;
-import org.openworkflow.sdk.impl.lifecycle.LifeCycleEventType;
 import org.openworkflow.sdk.impl.http.DefaultHttpRequestBuilderFactory;
 import org.openworkflow.sdk.impl.http.DefaultURITemplateResolver;
 import org.openworkflow.sdk.impl.http.URITemplateResolver;
 import org.openworkflow.sdk.impl.http.WorkflowHttpRequestFactory;
+import org.openworkflow.sdk.impl.lifecycle.LifeCycleEventType;
 import org.openworkflow.sdk.impl.lifecycle.WorkflowExecutionCompletableListener;
 import org.openworkflow.sdk.impl.lifecycle.WorkflowExecutionListener;
 import org.openworkflow.sdk.impl.lifecycle.WorkflowExecutionListenerAdapter;
@@ -738,7 +738,7 @@ public class WorkflowApplication implements AutoCloseable {
     return workflowContext.isEmpty() && taskContext.isEmpty()
         ? additionalObject(name)
         : (Optional<T>)
-            additionalObject(name, workflowContext.orElseThrow(), taskContext.orElseThrow())
+            additionalObject(name, workflowContext.orElseThrow(), taskContext.orElse(null))
                 .or(() -> additionalObject(name));
   }
 

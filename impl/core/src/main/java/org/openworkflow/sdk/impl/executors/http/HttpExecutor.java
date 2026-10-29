@@ -22,7 +22,7 @@ import org.openworkflow.sdk.impl.WorkflowContext;
 import org.openworkflow.sdk.impl.WorkflowModel;
 import org.openworkflow.sdk.impl.WorkflowValueResolver;
 import org.openworkflow.sdk.impl.executors.CallableTask;
-import org.openworkflow.sdk.impl.http.WorkflowHTTPRequestHelper;
+import org.openworkflow.sdk.impl.http.WorkflowHttpRequestHelper;
 import org.openworkflow.sdk.impl.http.WorkflowHttpRequestInfoBuilderFactory;
 
 public class HttpExecutor implements CallableTask {
@@ -38,7 +38,7 @@ public class HttpExecutor implements CallableTask {
 
   public CompletableFuture<WorkflowModel> apply(
       WorkflowContext workflow, TaskContext taskContext, WorkflowModel input) {
-    return WorkflowHTTPRequestHelper.executeRequest(
+    return WorkflowHttpRequestHelper.executeRequest(
         builder
             .build(workflow, taskContext, input)
             .build(uriSupplier.apply(workflow, taskContext, input)),

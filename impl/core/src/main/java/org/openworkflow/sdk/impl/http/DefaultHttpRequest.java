@@ -49,7 +49,7 @@ public class DefaultHttpRequest implements WorkflowHttpRequest {
     WorkflowModel body = httpInfo.body();
     builder.method(
         httpInfo.method(),
-        body == null
+        body == null || body.isNull()
             ? HttpRequest.BodyPublishers.noBody()
             : HttpRequest.BodyPublishers.ofByteArray(
                 body.asJson()
@@ -70,10 +70,10 @@ public class DefaultHttpRequest implements WorkflowHttpRequest {
     builder.uri(uri);
     String ifModifiedSince = httpInfo.ifModifiedSince();
     if (ifModifiedSince != null) {
-      builder.header(WorkflowHTTPRequestHelper.IF_MODIFIED_SINCE_HEADER, ifModifiedSince);
+      builder.header(WorkflowHttpRequestHelper.IF_MODIFIED_SINCE_HEADER, ifModifiedSince);
     }
-    return WorkflowHTTPRequestHelper.processAuth(
-            httpInfo, (k, v) -> builder.header(k, v), workflowContext, taskContext)
+    return WorkflowHttpRequestHelper.processAuth(
+            httpInfo, builder::header, workflowContext, taskContext)
         .thenCompose(
             __ ->
                 client
@@ -81,8 +81,8 @@ public class DefaultHttpRequest implements WorkflowHttpRequest {
                     .exceptionallyCompose(
                         ex ->
                             CompletableFuture.failedFuture(
-                                WorkflowHTTPRequestHelper.fromError(ex, taskContext))))
-        .thenApply(response -> new DefaultHttpResponse(app, response));
+                                WorkflowHttpRequestHelper.fromError(ex, taskContext))))
+        .thenApply(response -> new DefaultHttpResponse(app, taskContext, response));
   }
 
   private URI addQueryParams(URI uri, Map<String, Object> queryParams) {

@@ -31,7 +31,7 @@ import org.openworkflow.sdk.impl.auth.AuthProvider;
 import org.openworkflow.sdk.impl.auth.AuthUtils;
 import org.openworkflow.sdk.types.Errors;
 
-public class WorkflowHTTPRequestHelper {
+public class WorkflowHttpRequestHelper {
 
   public static final String IF_MODIFIED_SINCE_HEADER = "If-Modified-Since";
 
@@ -59,10 +59,7 @@ public class WorkflowHTTPRequestHelper {
 
   public static WorkflowException fromError(Throwable ex, Optional<TaskContext> task) {
     throw new WorkflowException(
-        WorkflowError.communication(
-                WorkflowHTTPRequestHelper.errorCodeFromException(ex.getCause()), task, ex)
-            .build(),
-        ex);
+        WorkflowError.communication(errorCodeFromException(ex.getCause()), task, ex).build(), ex);
   }
 
   private static int errorCodeFromException(Throwable ex) {
@@ -128,5 +125,5 @@ public class WorkflowHTTPRequestHelper {
     return status >= lower && status < upper;
   }
 
-  private WorkflowHTTPRequestHelper() {}
+  private WorkflowHttpRequestHelper() {}
 }

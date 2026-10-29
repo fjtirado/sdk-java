@@ -113,9 +113,9 @@ There are also companion modules/docs for:
 
 By default, the SDK reference implementation use `java.net.HttpRequest` to support Http calls. Therefore, no dependency needs to be added for using Http Call task or downloading of http resources, like OpenAPI schemas. 
 
-However, for further configuration of Http functionality, users might include the Jakarta based modules, which will allow customizing `jakarta.ws.rs.client.Client` in J2EE environments. 
+However, for further configuration of Http functionality, users might include the Jakarta based modules, which will allow customizing `jakarta.ws.rs.client.Client` in Jakarta EE environments. 
 
-    * **openworkflow-impl-http** HTTP `Call` task handler, based on Jax-RS client
+    * **openworkflow-impl-http** HTTP `Call` task handler, based on JAX-RS client
     * **openworkflow-impl-jackson-jwt** Optimized entity converter for Jackson model and OAuth2/OIDC helpers for Jakarta HTTP calls.
     
 ---

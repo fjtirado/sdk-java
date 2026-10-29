@@ -18,4 +18,6 @@ package org.openworkflow.sdk.impl.jakarta.http;
 public class HttpClientResolver {
 
   public static final String HTTP_CLIENT_PROVIDER = "httpClientProvider";
+
+  private HttpClientResolver() {}
 }

@@ -21,6 +21,7 @@ import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.Optional;
 import java.util.OptionalLong;
+import org.openworkflow.sdk.impl.TaskContext;
 import org.openworkflow.sdk.impl.WorkflowApplication;
 import org.openworkflow.sdk.impl.WorkflowModel;
 import org.slf4j.Logger;
@@ -31,10 +32,15 @@ public class DefaultHttpResponse implements WorkflowHttpResponse {
   private static final Logger logger = LoggerFactory.getLogger(DefaultHttpResponse.class);
   private final WorkflowApplication application;
   private final HttpResponse<byte[]> response;
+  private final Optional<TaskContext> context;
 
-  public DefaultHttpResponse(WorkflowApplication application, HttpResponse<byte[]> response) {
+  public DefaultHttpResponse(
+      WorkflowApplication application,
+      Optional<TaskContext> context,
+      HttpResponse<byte[]> response) {
     this.application = application;
     this.response = response;
+    this.context = context;
   }
 
   @Override
@@ -64,12 +70,16 @@ public class DefaultHttpResponse implements WorkflowHttpResponse {
   @Override
   public String errorDetails() {
     byte[] body = response.body();
-    return body != null ? new String(response.body()) : "No error information";
+    return body != null ? new String(body) : "No error information";
   }
 
   @Override
   public Optional<WorkflowModel> asWorkflowModel() {
-    return application.modelFactory().fromJson(response.body());
+    try {
+      return application.modelFactory().fromJson(response.body());
+    } catch (Exception ex) {
+      throw WorkflowHttpRequestHelper.fromError(ex, context);
+    }
   }
 
   @Override

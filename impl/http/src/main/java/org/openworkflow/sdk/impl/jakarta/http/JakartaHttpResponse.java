@@ -25,7 +25,7 @@ import java.util.stream.Collectors;
 import org.openworkflow.sdk.impl.TaskContext;
 import org.openworkflow.sdk.impl.WorkflowApplication;
 import org.openworkflow.sdk.impl.WorkflowModel;
-import org.openworkflow.sdk.impl.http.WorkflowHTTPRequestHelper;
+import org.openworkflow.sdk.impl.http.WorkflowHttpRequestHelper;
 import org.openworkflow.sdk.impl.http.WorkflowHttpResponse;
 
 public class JakartaHttpResponse implements WorkflowHttpResponse {
@@ -97,7 +97,7 @@ public class JakartaHttpResponse implements WorkflowHttpResponse {
     try {
       return Optional.of(app.modelFactory().fromAny(response.readEntity(converter.responseType())));
     } catch (ProcessingException ex) {
-      throw WorkflowHTTPRequestHelper.fromError(ex, taskContext);
+      throw WorkflowHttpRequestHelper.fromError(ex, taskContext);
     }
   }
 

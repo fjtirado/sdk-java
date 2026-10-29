@@ -32,8 +32,8 @@ import org.openworkflow.sdk.impl.WorkflowApplication;
 import org.openworkflow.sdk.impl.WorkflowContext;
 import org.openworkflow.sdk.impl.WorkflowError;
 import org.openworkflow.sdk.impl.WorkflowException;
-import org.openworkflow.sdk.impl.http.WorkflowHTTPRequestHelper;
 import org.openworkflow.sdk.impl.http.WorkflowHttpRequest;
+import org.openworkflow.sdk.impl.http.WorkflowHttpRequestHelper;
 import org.openworkflow.sdk.impl.http.WorkflowHttpRequestInfo;
 import org.openworkflow.sdk.impl.http.WorkflowHttpResponse;
 
@@ -73,15 +73,15 @@ class JakartaRequestExecutor implements WorkflowHttpRequest {
     Builder request = target.request();
     String ifModifiedSince = requestInfo.ifModifiedSince();
     if (ifModifiedSince != null) {
-      request.header(WorkflowHTTPRequestHelper.IF_MODIFIED_SINCE_HEADER, ifModifiedSince);
+      request.header(WorkflowHttpRequestHelper.IF_MODIFIED_SINCE_HEADER, ifModifiedSince);
     }
     requestInfo.headers().forEach(request::header);
     if (workflowContext.isPresent()) {
       requestDecorators.forEach(
           d -> d.decorate(request, workflowContext.orElseThrow(), taskContext.orElse(null)));
     }
-    return WorkflowHTTPRequestHelper.processAuth(
-            requestInfo, (k, v) -> request.header(k, v), workflowContext, taskContext)
+    return WorkflowHttpRequestHelper.processAuth(
+            requestInfo, request::header, workflowContext, taskContext)
         .thenApplyAsync(
             __ ->
                 doRequest(
@@ -106,7 +106,7 @@ class JakartaRequestExecutor implements WorkflowHttpRequest {
               ? request.method(requestInfo.method())
               : request.method(requestInfo.method(), converter.toEntity(requestInfo.body())));
     } catch (ProcessingException ex) {
-      throw WorkflowHTTPRequestHelper.fromError(ex, task);
+      throw WorkflowHttpRequestHelper.fromError(ex, task);
     } catch (WebApplicationException ex) {
       throw new WorkflowException(
           WorkflowError.communication(ex.getResponse().getStatus(), task, ex).build(), ex);
